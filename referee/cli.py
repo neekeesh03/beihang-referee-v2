@@ -119,6 +119,8 @@ def parser() -> argparse.ArgumentParser:
     ck.add_argument("paths", nargs="+", help="Manuscript file(s): pdf, docx, md, txt, tex")
     ck.add_argument("--literature", action="store_true", help="Also verify cited DOIs and look for uncited prior art using free public sources (needs internet, no key)")
     ck.add_argument("--json-out", help="Write the JSON result to this path")
+    pb = sub.add_parser("playbook", help="Print the review directions and rules to paste into ANY AI chat (no key, no model)")
+    pb.add_argument("--stage", choices=["voice", "stopping", "decision", "elevation", "evidence"], help="Print one rule set only")
     sub.add_parser("list-modes", help="List supported review purposes")
     sub.add_parser("list-profiles", help="List built-in configuration profiles")
     sub.add_parser("list-scholarly-providers", help="List built-in scholarly search adapters")
@@ -229,6 +231,17 @@ def main() -> int:
         if errors:
             print("\n".join(errors)); return 1
         print("OK"); return 0
+    if args.command == "playbook":
+        from .direction import playbook
+        pbk = playbook(args.stage)
+        if args.stage:
+            print(pbk["rule"]); return 0
+        print("# Beihang Referee playbook\n\n" + pbk["principle"] + "\n\n## Workflow")
+        for st in pbk["workflow"]:
+            print(f"{st['step']}. **{st['name']}**: {st['ai_does']}" + (f" (Referee tool: {st['referee_tool']})" if st["referee_tool"] else ""))
+        for name, text in pbk["rules"].items():
+            print(f"\n---\n\n{text}")
+        return 0
     if args.command == "check":
         from .checks import run_checks, render_checks_markdown
         res = run_checks(args.paths, literature=args.literature)

@@ -33,7 +33,14 @@ def classify_fix(minimum_resolution: str) -> str:
     return "wording"
 
 
+LEVELS_EXPLICIT = {"invalidates": 4.0, "changes_interpretation": 3.0, "weakens": 2.0, "minor": 1.0}
+
+
 def consequence_weight(c: dict[str, Any]) -> float:
+    """Use the reviewer's explicit consequence_level when given; otherwise fall back to keywords."""
+    lvl = str(c.get("consequence_level") or "").lower()
+    if lvl in LEVELS_EXPLICIT:
+        return LEVELS_EXPLICIT[lvl]
     text = (str(c.get("scientific_consequence") or "") + " " + str(c.get("failure_mechanism") or "")).lower()
     if any(x in text for x in ("invalidat", "cannot support", "not identifiable", "cannot identify", "uninterpretable",
                                "principal conclusion", "central conclusion is unsupported", "main conclusion is unsupported")):
