@@ -14,7 +14,8 @@
 - **Overall Scientific Confidence:** 0.45
 - **Verifier Independence:** {'mode': 'fresh-context/same-model', 'generator_model': None, 'verifier_model': None, 'cross_model': False}
 - **Scientific State:** {'status': 'COMPETITIVE_BUT_FIX_ADVISABLE', 'rationale': 'One or more verified major concerns remain, but none was classified as central claim-invalidating.'}
-- **Recommendation Basis:** Major scientific issues remain and require closure before the central conclusions should be treated as secure.
+- **Editorial Recommendation:** MAJOR_REVISION
+- **Recommendation Basis:** At least one verified concern touches a central claim and needs a reanalysis, new evidence, or a material change to what the paper claims.
 
 ## Major concerns
 
