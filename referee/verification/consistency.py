@@ -109,6 +109,12 @@ PATTERNS = {
     "r": re.compile(r"\br\s*\(\s*(\d+)\s*\)\s*=\s*" + _NUM + r"\s*[,;]?\s*" + _P),
     "z": re.compile(r"\bz\s*=\s*" + _NUM + r"\s*[,;]?\s*" + _P),
 }
+# "t = 2.10, df = 45, p = .04", "F = 4.5, df = 1, 40, p = .03", "chi2 = 4.8, df = 1, p = .03"
+PATTERNS_DF_AFTER = {
+    "t": re.compile(r"\bt\s*=\s*" + _NUM + r"\s*,\s*df\s*=\s*(\d+(?:\.\d+)?)\s*[,;]?\s*" + _P),
+    "F": re.compile(r"\bF\s*=\s*" + _NUM + r"\s*,\s*df\s*=\s*(\d+)\s*[,/]\s*(\d+(?:\.\d+)?)\s*[,;]?\s*" + _P),
+    "chi2": re.compile(r"(?:χ\s*2|χ²|\bchi-?\s*square[d]?|\bchi2|\bX2)\s*=\s*" + _NUM + r"\s*,\s*df\s*=\s*(\d+)\s*[,;]?\s*" + _P, re.I),
+}
 
 
 def _decimals(s: str) -> int:
@@ -139,40 +145,64 @@ def _p_consistent(op: str, rep: float, rep_str: str, lo: float, hi: float) -> bo
     return hi > rep - 1e-12
 
 
-def check_test_statistics(text: str) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
+def _iter_matches(text: str):
     for kind, rx in PATTERNS.items():
         for m in rx.finditer(text):
             g = m.groups()
-            op, p_str = g[-2], g[-1]
-            try:
-                rep = float(p_str)
-                if kind == "F":
-                    args, stat_str = (float(g[0]), float(g[1])), g[2]
-                elif kind == "z":
-                    args, stat_str = (), g[0]
-                else:
-                    args, stat_str = (float(g[0]),), g[1]
-                lo, hi = _p_range(kind, args, stat_str)
-            except (ValueError, ZeroDivisionError, OverflowError):
-                continue
-            ok = _p_consistent(op, rep, p_str, lo, hi)
-            if ok:
-                continue
-            comp = (lo + hi) / 2.0
-            nop = {"≤": "<", "≥": ">"}.get(op, op)
-            claims_sig = (nop == "<" and rep <= 0.05) or (nop == "=" and rep < 0.05)
-            claims_nonsig = (nop == ">" and rep >= 0.05) or (nop == "=" and rep >= 0.05)
-            gross = (claims_sig and lo >= 0.05) or (claims_nonsig and hi < 0.05)
-            out.append({
-                "check": "test_statistic_vs_p", "test": kind, "quote": m.group(0).strip(),
-                "reported_p": f"{op}{p_str}", "recomputed_p": float(f"{comp:.3g}"),
-                "recomputed_range": [float(f"{lo:.3g}"), float(f"{hi:.3g}")],
-                "severity": "gross" if gross else "minor",
-                "note": ("Reported significance changes when p is recomputed from the statistic and degrees of freedom."
-                         if gross else "Reported p differs from the recomputed value beyond rounding."),
-            })
+            if kind == "F":
+                yield kind, m, (float(g[0]), float(g[1])), g[2], g[-2], g[-1]
+            elif kind == "z":
+                yield kind, m, (), g[0], g[-2], g[-1]
+            else:
+                yield kind, m, (float(g[0]),), g[1], g[-2], g[-1]
+    for kind, rx in PATTERNS_DF_AFTER.items():
+        for m in rx.finditer(text):
+            g = m.groups()
+            if kind == "F":
+                yield kind, m, (float(g[1]), float(g[2])), g[0], g[-2], g[-1]
+            else:
+                yield kind, m, (float(g[1]),), g[0], g[-2], g[-1]
+
+
+def check_test_statistics(text: str) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[int, int]] = set()
+    for kind, m, args, stat_str, op, p_str in _iter_matches(text):
+        if m.span() in seen:
+            continue
+        seen.add(m.span())
+        try:
+            rep = float(p_str)
+            lo, hi = _p_range(kind, args, stat_str)
+        except (ValueError, ZeroDivisionError, OverflowError):
+            continue
+        if _p_consistent(op, rep, p_str, lo, hi):
+            continue
+        comp = (lo + hi) / 2.0
+        nop = {"≤": "<", "≥": ">"}.get(op, op)
+        claims_sig = (nop == "<" and rep <= 0.05) or (nop == "=" and rep < 0.05)
+        claims_nonsig = (nop == ">" and rep >= 0.05) or (nop == "=" and rep >= 0.05)
+        gross = (claims_sig and lo >= 0.05) or (claims_nonsig and hi < 0.05)
+        out.append({
+            "check": "test_statistic_vs_p", "test": kind, "quote": m.group(0).strip(),
+            "reported_p": f"{op}{p_str}", "recomputed_p": float(f"{comp:.3g}"),
+            "recomputed_range": [float(f"{lo:.3g}"), float(f"{hi:.3g}")],
+            "severity": "gross" if gross else "minor",
+            "note": ("Reported significance changes when p is recomputed from the statistic and degrees of freedom."
+                     if gross else "Reported p differs from the recomputed value beyond rounding. A typo in the statistic, "
+                     "the degrees of freedom or the p-value is the usual cause; check which one."),
+        })
     return out
+
+
+_ZERO_P = re.compile(r"\bp\s*(?:=|<)\s*0?\.0+(?![0-9])", re.I)
+
+
+def check_zero_p(text: str) -> list[dict[str, Any]]:
+    return [{"check": "impossible_p_value", "quote": m.group(0), "severity": "minor",
+             "note": "A p-value cannot be exactly zero. Report p < .001 (or the smallest value the software can resolve)."}
+            for m in _ZERO_P.finditer(text)]
+
 
 # ---------- GRIM ----------
 
@@ -262,8 +292,10 @@ def check_references(text: str, now_year: int | None = None) -> list[dict[str, A
         if uncited:
             out.append({"check": "reference_listed_not_cited", "severity": "minor",
                         "note": f"Reference list entries {uncited[:15]} are never cited in the text."})
-    dois = [d.rstrip(".,;)") for d in _DOI.findall(refs or text)]
-    dup = sorted({d.lower() for d in dois if [x.lower() for x in dois].count(d.lower()) > 1})
+    # Only inspect a reference list we actually located; DOIs also appear in front matter and data statements.
+    per_line = [{d.rstrip(".,;)").lower() for d in _DOI.findall(line)} for line in refs.splitlines()] if refs else []
+    flat = [d for line in per_line for d in line]  # a DOI repeated within ONE entry is not a duplicate reference
+    dup = sorted({d for d in flat if flat.count(d) > 1})
     if dup:
         out.append({"check": "reference_duplicate_doi", "severity": "minor", "note": f"Duplicate DOI(s) in references: {dup[:8]}."})
     future = sorted({int(y) for y in re.findall(r"\((\d{4})[a-z]?\)", refs) if int(y) > now_year + 1})
@@ -273,7 +305,7 @@ def check_references(text: str, now_year: int | None = None) -> list[dict[str, A
 
 
 def run_automated_checks(text: str, now_year: int | None = None) -> dict[str, Any]:
-    findings = (check_test_statistics(text) + check_grim(text) + check_percentages(text) + check_references(text, now_year))
+    findings = (check_test_statistics(text) + check_zero_p(text) + check_grim(text) + check_percentages(text) + check_references(text, now_year))
     return {
         "method": "offline recomputation; no model, no network",
         "findings": findings,
