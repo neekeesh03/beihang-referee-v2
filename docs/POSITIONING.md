@@ -14,7 +14,7 @@ The survey rates agents on two axes. **Capability envelope** is E1 (linear execu
 Honest placement of Referee:
 - **Envelope: E1.** It runs a fixed review workflow with revision rounds. It does not close a loop back into experiments.
 - **Role: Assistant**, by design. A human stays in charge and the user's own AI does the reasoning.
-- **Maturity: below M1.** M1 needs demonstrated competence on controlled tasks or benchmarks. Referee has one blind test on one paper (`docs/evaluation/BLIND_TEST_PAPER2AGENT.md`) and unit tests. That is a prototype, not benchmark competence.
+- **Maturity: below M1.** M1 needs demonstrated competence on controlled tasks or benchmarks. Referee has two single-run blind tests on two papers from different fields (`docs/evaluation/BLIND_TEST_PAPER2AGENT.md`, `docs/evaluation/BLIND_TEST_2_ELIFE.md`) and unit tests. That is a prototype with encouraging early signals, not benchmark competence.
 
 What would move it up, using the survey's own evidence categories:
 - **M1:** run on public review-alignment benchmarks the survey lists for this stage (Reviewer2 and ReviewCritique, "measuring agents' alignment with human reviewers") and report agreement with human reviews.
