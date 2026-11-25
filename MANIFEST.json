@@ -5,7 +5,7 @@
   "skills": 56,
   "agents": 24,
   "runtime_modules": 174,
-  "tests": 72,
+  "tests": 73,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 31067
+      "size": 31977
     },
     {
       "path": "SECURITY.md",
