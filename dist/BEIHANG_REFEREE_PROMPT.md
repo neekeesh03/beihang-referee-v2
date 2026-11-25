@@ -864,6 +864,82 @@ After the verdict, give the authors a plan that makes the paper better, not only
 
 ---
 
+## SOURCE: core/NATURE_STYLE_REPORT.md
+
+# Journal-Grade Report Structure (modelled on a real Nature-family peer review file)
+
+Patterns below come from a published Nature peer-review file (five referees, three review rounds, author rebuttals). They describe how experienced referees actually write. They are patterns to follow, not text to copy.
+
+## Round 1 report: structure
+
+1. **Summary.** A neutral, accurate restatement of what the paper does, with the headline numbers the authors report (for example "15/15 queries correct, 22 tools generated in about 3 hours"). Finish with an honest one-paragraph overall view: what is impressive, and the three or four things that would most strengthen it. A reader who skips everything else must still get the verdict.
+2. **Strengths.** Specific, quantified, tied to the manuscript. Never generic.
+3. **Weaknesses and requests.** Each item has the same shape: *what the manuscript says or does (with numbers)* + *why that limits the conclusion* + *a concrete request* ("expand to at least 100 queries and report confidence intervals", "report how many tools were attempted versus retained"). Requests are specific enough that the authors know when they are done.
+4. **Sections some journals expect:** originality and significance (name the closest prior systems, for example by name and link, and ask how this differs); data and methodology; statistics and uncertainty; robustness of conclusions; references and credit; clarity of abstract and conclusions.
+5. **Suggested improvements** as a numbered list the authors can answer one by one.
+6. **Minor comments:** figure legibility, unclear definitions, hardware specifications, what counts as a passing test.
+7. **Remarks on code and data availability.** A short separate paragraph: is it documented, runnable, public?
+
+Recurring concerns worth checking in any paper: survivorship bias (only successes reported), train/test overlap (tools validated on the same material they are tested on), confounded baselines (baseline given less information than the system), small samples with no intervals, single point estimates for stochastic systems, claims worded stronger than evidence ("discovery" versus "prioritised hypothesis"), unreported failure rates, missing ablations, narrow domain, missing cost and maintenance analysis.
+
+## Later rounds: structure
+
+- **Improvements.** Say, item by item, what the authors fixed and how the new evidence settled it. Credit real work.
+- **Remaining concerns.** Numbered. Each says exactly why it is not yet settled. Keep to the frozen ledger.
+- **New concerns are legitimate only when they come from (a) new data or text the revision introduced, or (b) a verifiable change in the field** (for example a stronger baseline model now exists). State which, and cite the source for (b).
+- **Acknowledge partial resolution honestly.** "Handled well for X, but the large-scale benchmark still uses the older model, so Y remains open."
+- **Overall assessment.** Separate the two judgements below.
+- When satisfied, say so plainly: "the major concerns have been satisfactorily addressed", and list the few residual points.
+
+## Two separate verdicts (do not merge them)
+
+- **Soundness:** are the conclusions supported by the evidence? This sets accept / minor / major / reject.
+- **Significance and venue fit:** is the advance large enough for this venue? A paper can be sound and still better suited to a specialist venue ("a high-impact methods venue, where the technical contribution would be valued, rather than a journal that expects broader conceptual advances"). State it separately, and say what evidence would justify aiming higher: for example isolating a capability attributable to the new method itself rather than to the base model.
+
+Different referees may reach different overall views on the same paper. A good report states its own reasoning clearly rather than guessing what others will say.
+
+## Language of claims
+
+Prefer "prioritised" or "generated a computational hypothesis" over "discovered" or "identified" unless there is independent experimental validation. Say plainly when a validation is a secondary analysis of existing data. If a human chose among AI-proposed options, say so.
+
+
+---
+
+## SOURCE: core/COVERAGE_CHECKLIST.md
+
+# Coverage Checklist: What Experienced Referees Check
+
+Use as a prompt for your own thinking, not a list to paste. For each item decide: applies / does not apply / cannot tell. Raise a concern only if it applies AND you can anchor it to an exact quote or a clearly absent element. Origin: recurring requests in a published Nature-family review file (a methods/systems paper), plus standard methodological practice. It has been checked against one paper only; extend it with experience.
+
+## Any empirical paper
+- **Sample and uncertainty:** is n large enough for the claim? Intervals or tests reported? One run reported for a stochastic process?
+- **Survivorship:** are failures, exclusions and dropped items counted (attempted vs retained)?
+- **Train/test overlap:** was the system built or tuned on the same material it is tested on? Are "new" test cases truly different in kind, or parameter variations?
+- **Baselines:** strongest current baseline? Given equal information and effort? Stale model or version?
+- **Ground truth:** how was it set, by whom, how many raters, what agreement, what rubric?
+- **Claims vs evidence:** "discovered/identified" vs "prioritised hypothesis"; "validated" vs secondary analysis of existing data; any human choice hidden inside "autonomous" results?
+- **Generality:** one domain, one tool, one model, one dataset? Say what is untested.
+- **Failure modes:** out-of-scope, ambiguous or adversarial inputs; how often does it wrongly claim capability? Error rate stated near the headline result?
+- **Cost and maintenance:** time, money, hardware, who keeps it working as dependencies change?
+
+## Systems, software and AI-method papers (also)
+- **Ablations:** is each component shown to matter? Is a simpler alternative (a monolith, a plain document, a script) compared fairly?
+- **Closest existing systems:** named, compared in a table, difference stated (use retrieval; do not rely on memory).
+- **Inherited errors:** if built on prior code or data, do their bugs propagate? Can validation detect them or only confirm consistency with them?
+- **Adaptation:** does it adjust parameters to the data, or follow a fixed template that happens to work on the tested cases? Can it train as well as run?
+- **Security and misuse:** threat model, data and credential handling, malicious inputs, attribution and IP.
+- **Reproducibility of the system itself:** key algorithms in the paper (pseudocode), not only in a repository; versioned release; what cannot be frozen.
+- **Definitions:** what exactly counts as a pass, a novel query, a success?
+
+## Clinical, epidemiological and social-science papers (also)
+- Confounding and identification strategy; pre-registration; multiple comparisons; missing data; measurement validity; selection and generalisability; effect sizes with intervals; reporting-guideline adherence (CONSORT, STROBE, PRISMA).
+
+## Presentation
+- Abstract matches the evidence; figures legible with stated units, n and error bars; inputs and outputs of each pipeline step clear; code and data availability stated.
+
+
+---
+
 ## SOURCE: core/OUTPUT_CONTRACT.md
 
 # Output Contract
