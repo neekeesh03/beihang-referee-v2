@@ -117,3 +117,12 @@ def test_field_development_concern_needs_external_source_and_is_labelled():
 
 def test_playbook_includes_journal_report_style():
     assert "Two separate verdicts" in d.playbook()["rules"]["report_style"]
+
+
+def test_minor_rated_concern_is_a_minor_comment_and_does_not_use_the_major_budget():
+    s = d.Session(V1); s.save()
+    minors = [good(title=f"m{i}", consequence_level="minor", anchors=[q]) for i, q in enumerate(
+        ["There was no randomized control group.", "A single observational cohort of 80 participants"])]
+    out = d.submit_concerns(s, CLAIMS, minors + [good(title="real", anchors=["Mean Y increased from 50 to 60 units"])])
+    assert [c["title"] for c in out["admitted"]] == ["real"]
+    assert [c["new_status"] for c in out["downgraded"]] == ["minor", "minor"]
