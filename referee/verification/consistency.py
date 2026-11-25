@@ -223,17 +223,26 @@ _GRIM = [re.compile(r"\bM\s*=\s*(\d+\.\d+)[^()\n]{0,60}?\bn\s*=\s*(\d+)", re.I),
          re.compile(r"\bn\s*=\s*(\d+)[^()\n]{0,60}?\bM\s*=\s*(\d+\.\d+)", re.I)]
 
 
+_INTEGER_CUE = re.compile(r"(?i)\b(likert|scale|items?|count(?:s|ed)?|number of|rated|rating|ratings|score[sd]?|points?|questionnaire|integer|whole[- ]number|correct answers|trials correct|symptoms?)\b")
+
+
 def check_grim(text: str) -> list[dict[str, Any]]:
+    """GRIM only has meaning for whole-number data. Report only when the surrounding text suggests such a measure
+    (Likert, count, rating, items...). Without that cue a fractional mean is perfectly possible and nothing is flagged."""
     out = []
     for i, rx in enumerate(_GRIM):
         for m in rx.finditer(text):
             mean_s, n_s = (m.group(1), m.group(2)) if i == 0 else (m.group(2), m.group(1))
             n = int(n_s)
+            context = text[max(0, m.start() - 300): m.end() + 100]
+            if not _INTEGER_CUE.search(context):
+                continue
             if 2 <= n <= 100 and not grim_possible(mean_s, n):
                 out.append({"check": "grim", "quote": m.group(0).strip(), "severity": "minor",
-                            "note": f"A mean of {mean_s} cannot be produced by {n} whole-number scores. Only meaningful if the "
-                                    "measure is integer-valued (counts, single Likert items). If so, n or the mean is misreported."})
+                            "note": f"A mean of {mean_s} cannot be produced by {n} whole-number scores. The nearby text suggests an integer-valued measure; "
+                                    "if so, n or the mean is misreported. If the measure is continuous, ignore this."})
     return out
+
 
 # ---------- counts vs percentages ----------
 
