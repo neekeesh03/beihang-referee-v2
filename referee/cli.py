@@ -118,10 +118,17 @@ def parser() -> argparse.ArgumentParser:
     ck = sub.add_parser("check", help="Model-free checks (statistics vs p-values, GRIM, percentages, references; optional free literature lookup). No API key")
     ck.add_argument("paths", nargs="+", help="Manuscript file(s): pdf, docx, md, txt, tex")
     ck.add_argument("--literature", action="store_true", help="Also verify cited DOIs and look for uncited prior art using free public sources (needs internet, no key)")
+    ck.add_argument("--writing", action="store_true", help="Also print descriptive prose metrics and writing flags")
     ck.add_argument("--figures", action="store_true", help="Also look for duplicated images inside PDF figures (needs: pip install pymupdf pillow)")
     ck.add_argument("--json-out", help="Write the JSON result to this path")
     pb = sub.add_parser("playbook", help="Print the review directions and rules to paste into ANY AI chat (no key, no model)")
     pb.add_argument("--stage", choices=["voice", "stopping", "decision", "elevation", "evidence"], help="Print one rule set only")
+    rs = sub.add_parser("response-check", help="Audit a response-to-reviewers letter against Noble's ten simple rules (no model)")
+    rs.add_argument("response", help="Response letter file")
+    rs.add_argument("--reviews", help="Reviewer comments file (lets it find unanswered comments)")
+    rk = sub.add_parser("response-skeleton", help="Create a response-to-reviewers template from reviewer comments (no model)")
+    rk.add_argument("reviews", help="Reviewer comments file")
+    rk.add_argument("--title", default="the manuscript")
     sub.add_parser("list-modes", help="List supported review purposes")
     sub.add_parser("list-profiles", help="List built-in configuration profiles")
     sub.add_parser("list-scholarly-providers", help="List built-in scholarly search adapters")
@@ -243,12 +250,33 @@ def main() -> int:
         for name, text in pbk["rules"].items():
             print(f"\n---\n\n{text}")
         return 0
+    if args.command == "response-check":
+        from .response import audit_response
+        rv = DocumentLoader().load(args.reviews).text if args.reviews else None
+        res = audit_response(DocumentLoader().load(args.response).text, rv)
+        for f in res["findings"]:
+            print(f"[{f['status']}] rule {f['rule']}: {f['note']}")
+        print(f"\n{res['warnings']} warning(s). {res['note']}"); return 0
+    if args.command == "response-skeleton":
+        from .response import response_skeleton
+        print(response_skeleton(DocumentLoader().load(args.reviews).text, args.title)); return 0
     if args.command == "check":
         from .checks import run_checks, render_checks_markdown
         res = run_checks(args.paths, literature=args.literature, figures=args.figures)
         if args.json_out:
             _write_or_print(res, args.json_out)
-        print(render_checks_markdown(res)); return 0
+        print(render_checks_markdown(res))
+        if args.writing:
+            from .verification.writing import check_writing
+            w = check_writing(DocumentLoader().load(args.paths[0]).text)
+            print("\n## Writing metrics (descriptive)")
+            for k, v in w["profile"].items():
+                if k != "undefined_acronyms":
+                    print(f"- {k}: {v}")
+            for f in w["flags"]:
+                print(f"- FLAG {f['check']}: {f['note']} {f.get('items') or f.get('value') or ''}")
+            print("_" + w["note"] + "_")
+        return 0
     if args.command == "inspect-package":
         _write_or_print(PackageInspector().inspect(args.paths).to_dict(), args.json_out); return 0
     if args.command == "compare-revision":
