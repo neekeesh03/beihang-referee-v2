@@ -29,9 +29,18 @@ def test_central_claim_invalidated_needing_new_data_is_reject_in_current_form():
     assert r["recommendation"] == "REJECT_IN_CURRENT_FORM"
 
 
-def test_many_small_concerns_escalate():
-    cs = [concern(str(i), "C2", "Clarify wording.") for i in range(3)]
-    assert editorial_recommendation(CLAIMS, cs)["recommendation"] == "MAJOR_REVISION"
+def test_many_small_concerns_do_not_escalate_but_several_consequential_ones_do():
+    small = [concern(str(i), "C2", "Clarify wording.") for i in range(5)]
+    assert editorial_recommendation(CLAIMS, small)["recommendation"] == "MINOR_REVISION"
+    big = [{**concern(str(i), "C2", "Clarify wording."), "consequence_level": "changes_interpretation"} for i in range(3)]
+    assert editorial_recommendation(CLAIMS, big)["recommendation"] == "MAJOR_REVISION"
+
+
+def test_negated_requests_are_not_read_as_new_data():
+    assert classify_fix("No new data are needed; reword the abstract.") == "wording"
+    assert classify_fix("Reword it. There is no need to recruit more participants or run new experiments.") == "wording"
+    assert classify_fix("Recruit an independent cohort.") == "new_data"
+    assert classify_fix("whatever", fix_type="reanalysis") == "reanalysis"   # explicit judgement wins over keywords
 
 
 def test_gross_numerical_slip_alone_is_minor():
@@ -47,3 +56,16 @@ def test_fix_classifier():
 def test_comparing_saved_outputs_counts_as_reanalysis_and_matched_control_as_new_data():
     assert classify_fix("Compare the saved outputs per dataset and report agreement.") == "reanalysis"
     assert classify_fix("Run a matched control with the same model without the tool.") == "new_data"
+
+
+def test_pipeline_cap_scales_with_central_claims_and_reports_what_it_drops():
+    from referee.decision import consolidate_and_cap
+    claims = [{"claim_id": "C1", "centrality": "central"}, {"claim_id": "C2", "centrality": "supporting"}]
+    mk = lambda i, t, m, lvl="changes_interpretation": {"concern_id": f"M{i}", "title": t, "claim_ids": ["C1"], "failure_mechanism": m, "consequence_level": lvl}
+    items = [mk(1, "alpha issue", "alpha mechanism about sampling frame bias"), mk(2, "beta issue", "beta mechanism about outcome timing leak"),
+             mk(3, "gamma issue", "gamma mechanism about exclusion rules applied late"), mk(4, "delta issue", "delta mechanism about statistical power shortfall"),
+             mk(5, "alpha again", "alpha mechanism about sampling frame bias")]
+    kept, dropped = consolidate_and_cap(claims, items, hard_max=12)
+    assert len(kept) == 3                                   # one central claim -> 3
+    reasons = {x["status"] for x in dropped}
+    assert reasons == {"merged_into_other", "over_budget"} and all(x["admission_errors"] for x in dropped)

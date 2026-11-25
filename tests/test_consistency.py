@@ -24,8 +24,10 @@ def test_nonsignificant_reported_but_actually_significant_is_gross():
 
 
 def test_grim_and_percentages():
-    assert check_grim("(M = 3.45, SD = 1.2, n = 15)")
-    assert not check_grim("(M = 3.47, SD = 1.2, n = 15)")
+    assert check_grim("Ratings on a 7-point Likert scale were high (M = 3.45, SD = 1.2, n = 15)")
+    assert not check_grim("Ratings on a 7-point Likert scale were high (M = 3.47, SD = 1.2, n = 15)")
+    # continuous measure (no integer cue nearby): a fractional mean is fine, so no flag
+    assert not check_grim("Reaction time averaged (M = 3.45, SD = 1.2, n = 15) milliseconds")
     assert check_percentages("13/40 (35%)")
     assert not check_percentages("12/40 (30%)")
 
