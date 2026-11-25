@@ -1582,6 +1582,57 @@ Use as a prompt for your own thinking, not a list to paste. For each item decide
 
 ---
 
+## SOURCE: core/WRITING_QUALITY.md
+
+# Writing Quality: What Strong Papers Do (observed in four exemplars, not a formula)
+
+Exemplars supplied by the user: Gollwitzer (1999), "Implementation intentions: Strong effects of simple plans" (American Psychologist); Einstein (1905), "On the electrodynamics of moving bodies"; and two recent surveys (Wang et al., IEEE Communications Surveys & Tutorials 2026; Wang et al., IEEE TPAMI 2026). Four papers cannot define a norm. These are techniques the exemplars share, offered as questions a reviewer can ask. Do not require them.
+
+## Techniques seen
+1. **Open with a problem the reader can feel.** Einstein starts from a concrete asymmetry (a magnet and a conductor produce the same current whichever one moves, yet theory explains the two cases differently). Gollwitzer starts from a doubt people actually hold ("Do good intentions deserve this bad reputation?") before arguing against it.
+2. **Define the key term before using it, and make it operational.** Einstein defines simultaneity through clocks and light signals before using the word. Gollwitzer states the core idea as a usable sentence ("Whenever situation x arises, I will initiate the goal-directed response y!").
+3. **State the claim, then the reason it is not obvious.** Both name the rival view or likely objection and answer it ("It might appear possible to overcome all the difficulties... But...").
+4. **Make the logic visible.** Numbered sections and explicit steps (Einstein), headings that follow the argument (Gollwitzer), a stated structure and comparison with prior surveys (the two surveys, which also add a taxonomy and a comparison table).
+5. **Put caveats where they apply.** Einstein uses footnotes for inexactness and assumptions; Gollwitzer separates what intentions alone achieve from what implementation intentions add.
+6. **Say where the evidence stops.** The surveys name what remains unsolved (for example that real-world robustness evidence is still missing).
+
+## Reviewer questions
+- Can I state in two sentences what the paper claims and why it is not obvious?
+- Is every specialised term and acronym defined before use?
+- Does each section follow from the previous one, and is the structure announced?
+- Are caveats placed next to the claims they limit?
+- Are the limits of the evidence stated by the authors rather than left to reviewers?
+
+`referee check --writing` reports objective prose metrics next to these exemplars. It is descriptive only: field and article type change what is normal.
+
+
+---
+
+## SOURCE: core/RESPONSE_TO_REVIEWERS.md
+
+# Writing a Response to Reviewers (author side), and what a reviewer expects to read
+
+Source: W. S. Noble (2017), "Ten simple rules for writing a response to reviewers", PLOS Computational Biology 13(10): e1005730 (CC BY). Paraphrased; read the original.
+
+1. **Overview, then the full reviews.** Open with a summary of new data and analyses made for the most essential criticisms; note points raised by several reviewers. Then quote every review with your responses interleaved.
+2. **Be polite to every reviewer.** If they misunderstood, the text was probably unclear. A rude critique does not justify a rude reply. Concerns about a reviewer's motives go to the editor in a separate letter.
+3. **Accept the blame.** Apologise for lack of clarity and revise the text, even where it already seems clear. Show the reviewer they were heard.
+4. **Make the response self-contained.** Quote the changed text and give line numbers (say original or revised). A self-contained reply also lowers the chance that the reviewer rereads the manuscript and finds new complaints.
+5. **Answer every point.** One bullet may hold two issues; answer both. Do not skip a hard point.
+6. **Use typography** (typeface, colour, indentation) to separate the review, your response and the manuscript changes; explain the convention up front.
+7. **Start each response with a direct answer** (yes, no, we agree), then background.
+8. **Do what the reviewer asks when you can.** If you think an analysis is uninformative, do it, report the result, then explain why it does not belong in the paper. If you call 9 of 10 requests out of scope, you will not satisfy the reviewer. Where reviewers and editor conflict (for example length), defer to the editor.
+9. **Be clear what changed** between versions. Never reply "this is addressed in the manuscript" without saying whether it is new or already present.
+10. **Write it twice.** Draft candidly for your co-authors, then write the version the reviewers will see after the work is done. Use a separate letter to the editor for conflicts of interest and conflicting requests.
+
+## What this means for the reviewer role in Referee
+- A response that is self-contained and quotes changes is exactly what `revision_round` needs: the reviewer closes a concern only with an exact quote from the revised text.
+- Judge the revision against the frozen ledger, not against what the response letter says. Letters can overclaim.
+- If the authors narrowed a claim instead of running a new experiment, ask whether the narrower claim is supported (see REVIEW_STOPPING_RULES.md).
+
+
+---
+
 ## SOURCE: core/OUTPUT_CONTRACT.md
 
 # Output Contract
