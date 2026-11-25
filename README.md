@@ -33,10 +33,18 @@ What the director enforces on whatever AI is used:
 
 Also in this release: the chat prompts in `dist/` include the human voice, stopping rules, decision calibration and elevation plan; `referee check` works with no model at all.
 
+### Blind test against a real Nature peer-review file
+An AI directed by Referee reviewed the arXiv v1 of Paper2Agent without seeing the published peer-review file. It returned MAJOR_REVISION (the real referees' round-1 requests amounted to the same), admitted 5 concerns with all 28 quotes verified, and matched **11 of 28** referee concerns clearly, 9 partly and missed 8 (55% with partial credit). Details, the mapping and the tool bugs it exposed (all fixed) are in `docs/evaluation/BLIND_TEST_PAPER2AGENT.md`; the review is in `examples/blind_review_paper2agent.md`. One paper, one run, hand-scored: not a benchmark. Misses led to `core/COVERAGE_CHECKLIST.md`, which is derived from the same file, so it needs a fresh paper to test.
+
+Also new: the report structure and the "soundness vs significance/venue fit" split in `core/NATURE_STYLE_REPORT.md` come from that file; revision rounds also accept concerns that arise from a verifiable change in the field (with a cited source).
+
+### Figures, and why there is no neural network (yet)
+`referee check paper.pdf --figures` (and the `check_figures` MCP tool) finds duplicated or re-used images inside a PDF with perceptual hashing: whole images, flips, rotations and quadrant re-use. It is classical image forensics, needs no training, and ranks flips/moves above ordinary repeats such as logos. On a real paper (46 images) it reported 0 high-priority pairs and one repeated-logo group; on synthetic tests it finds flipped and re-positioned copies. A convolutional neural network could make it more robust to heavy editing, but it needs trained weights and ground-truth data to validate, so it is deliberately not included. Understanding what a figure shows is left to your own multimodal AI. Findings mean "a human should look", never misconduct.
+
 ### Early validation on real papers (small, honest)
 I ran the offline numerical checks on 6 open-access PLOS ONE full texts. Only 3 results were written in a form with degrees of freedom that can be recomputed, and all 3 were in one paper. Two of those 3 look like genuine reporting slips: `chi2(1) = 0.78, p = 0.781` recomputes to p = .377, and `chi2(2) = 4.84, p = 0.028` recomputes to p = .089 (p = .028 is what df = 1 gives). The check also found `p<0.000` (impossible) in another paper. This also exposed two false-positive sources that I fixed (a DOI repeated in front matter was not a duplicate reference; results written as `t = ..., df = ...` were not being parsed). Six papers is far too few to claim accuracy; most results in real papers lack the degrees of freedom needed for recomputation, so coverage is low.
 
-Tests: 140 pass (`test_retrieval.py`, `test_decision.py`, `test_consistency.py`, `test_direction.py` are new). The offline scripted demo still runs end to end; `examples/expected_demo_review.md` was regenerated because the decision brief now shows the graded recommendation and the numerical-checks section.
+Tests: 148 pass (`test_retrieval.py`, `test_decision.py`, `test_consistency.py`, `test_direction.py`, `test_figures.py` are new). The offline scripted demo still runs end to end; `examples/expected_demo_review.md` was regenerated because the decision brief now shows the graded recommendation and the numerical-checks section.
 
 **Limits, stated honestly.**
 - The prompt changes (voice, stopping rules, calibration, elevation plan) are design changes and have not been measured against a benchmark. The decision rules are heuristics: the fix type is read from the concern's stated minimum resolution by keywords, so an unusual wording can be misclassified. Editors should treat the recommendation as a structured starting point.

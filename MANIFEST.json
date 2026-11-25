@@ -4,8 +4,8 @@
   "description": "Evidence-grounded agentic peer review for scientific manuscripts",
   "skills": 56,
   "agents": 24,
-  "runtime_modules": 170,
-  "tests": 69,
+  "runtime_modules": 171,
+  "tests": 70,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 25540
+      "size": 27359
     },
     {
       "path": "SECURITY.md",
@@ -400,11 +400,11 @@
     },
     {
       "path": "dist/BEIHANG_REFEREE_FULL_AUDIT_PROMPT.md",
-      "size": 123804
+      "size": 131139
     },
     {
       "path": "dist/BEIHANG_REFEREE_PROMPT.md",
-      "size": 106738
+      "size": 114073
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -856,7 +856,7 @@
     },
     {
       "path": "pyproject.toml",
-      "size": 2248
+      "size": 2290
     },
     {
       "path": "referee/__init__.py",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "referee/cli.py",
-      "size": 17005
+      "size": 17176
     },
     {
       "path": "referee/comparison/__init__.py",
@@ -1828,7 +1828,7 @@
     },
     {
       "path": "referee/mcp/server.py",
-      "size": 5559
+      "size": 6004
     },
     {
       "path": "referee/models.py",
@@ -2116,7 +2116,7 @@
     },
     {
       "path": "referee/stages/core.py",
-      "size": 66674
+      "size": 66750
     },
     {
       "path": "referee/stages/modes.py",
@@ -2188,7 +2188,7 @@
     },
     {
       "path": "referee/verification/closure.py",
-      "size": 380
+      "size": 1564
     },
     {
       "path": "referee/verification/contradiction.py",
@@ -2268,7 +2268,7 @@
     },
     {
       "path": "scripts/build_single_prompt.py",
-      "size": 2875
+      "size": 3013
     },
     {
       "path": "scripts/prepare_expert_study.py",
@@ -2584,7 +2584,7 @@
     },
     {
       "path": "tests/platform/test_closure.py",
-      "size": 213
+      "size": 738
     },
     {
       "path": "tests/platform/test_code_metrics.py",
