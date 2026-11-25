@@ -15,12 +15,28 @@ This repository is a copy of [`neekeesh03/beihang-referee`](https://github.com/n
 | Literature search needed configured providers. | **`referee check --literature` (free public sources, no key).** Verifies each cited DOI against Crossref, flags retracted or withdrawn papers and DOIs whose record does not match the reference text, and lists possible uncited prior art from Europe PMC. |
 | Feedback listed flaws. | **Elevation plan.** `core/ELEVATION_PLAN.md` asks for a ranked "path to a stronger paper" (the advance in one sentence, knowledge delta against retrieved sources, strongest rival explanation, evidence upgrades cheapest first, reproducibility, fit), tied to places in the manuscript. |
 
-## Use it without an API key
+## Referee directs, your own AI does the work (no API key)
 
-1. **Chat route:** `dist/BEIHANG_REFEREE_PROMPT.md` now includes the human voice, stopping rules, decision calibration and elevation plan.
-2. **Model-free checks:** `referee check paper.pdf` or `referee check paper.pdf --literature`.
+Referee never needs its own model. Your assistant (Claude, ChatGPT, Gemini, a local model...) reads, reasons and writes. Referee supplies the **direction** and the **checks the assistant cannot fake**.
 
-Tests: 128 pass (`tests/test_retrieval.py`, `test_decision.py`, `test_consistency.py` are new). The offline scripted demo still runs end to end; `examples/expected_demo_review.md` was regenerated because the decision brief now shows the graded recommendation and the numerical-checks section.
+| Route | How |
+| --- | --- |
+| **MCP server** (best) | `pip install mcp` then run `referee-mcp` (or `python -m referee.mcp.server`) and add it to any MCP-capable assistant. Tools: `get_playbook`, `start_review`, `find_passages`, `verify_quote`, `check_numbers`, `check_references`, `submit_concerns`, `revision_round`. |
+| **Paste into any chat** | `referee playbook` prints the workflow and rules. `dist/BEIHANG_REFEREE_PROMPT.md` is the all-in-one prompt. |
+| **Model-free checks** | `referee check paper.pdf [--literature]` |
+
+What the director enforces on whatever AI is used:
+- **No invented evidence.** Every concern anchor must be an exact quote that `verify_quote` finds in the manuscript (whitespace and case tolerant).
+- **An admission gate** (`submit_concerns`): needs a steelman and why the concern survives it, confidence of at least 0.5, a testable closure criterion, no new-data demands on non-central claims, no duplicates, and at most 5 major concerns. Anything else is downgraded to a minor comment or a question, with the reason.
+- **A graded editorial recommendation** the assistant must use (accept / minor / major / reject in current form).
+- **A frozen ledger for revision rounds** (`revision_round`): a concern can only be closed with a quote from the revised text; new concerns are rejected unless the revision introduced them or a clear factual error was missed. This stops the review from moving the goalposts.
+
+Also in this release: the chat prompts in `dist/` include the human voice, stopping rules, decision calibration and elevation plan; `referee check` works with no model at all.
+
+### Early validation on real papers (small, honest)
+I ran the offline numerical checks on 6 open-access PLOS ONE full texts. Only 3 results were written in a form with degrees of freedom that can be recomputed, and all 3 were in one paper. Two of those 3 look like genuine reporting slips: `chi2(1) = 0.78, p = 0.781` recomputes to p = .377, and `chi2(2) = 4.84, p = 0.028` recomputes to p = .089 (p = .028 is what df = 1 gives). The check also found `p<0.000` (impossible) in another paper. This also exposed two false-positive sources that I fixed (a DOI repeated in front matter was not a duplicate reference; results written as `t = ..., df = ...` were not being parsed). Six papers is far too few to claim accuracy; most results in real papers lack the degrees of freedom needed for recomputation, so coverage is low.
+
+Tests: 140 pass (`test_retrieval.py`, `test_decision.py`, `test_consistency.py`, `test_direction.py` are new). The offline scripted demo still runs end to end; `examples/expected_demo_review.md` was regenerated because the decision brief now shows the graded recommendation and the numerical-checks section.
 
 **Limits, stated honestly.**
 - The prompt changes (voice, stopping rules, calibration, elevation plan) are design changes and have not been measured against a benchmark. The decision rules are heuristics: the fix type is read from the concern's stated minimum resolution by keywords, so an unusual wording can be misclassified. Editors should treat the recommendation as a structured starting point.

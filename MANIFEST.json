@@ -4,8 +4,8 @@
   "description": "Evidence-grounded agentic peer review for scientific manuscripts",
   "skills": 56,
   "agents": 24,
-  "runtime_modules": 169,
-  "tests": 68,
+  "runtime_modules": 170,
+  "tests": 69,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 23086
+      "size": 25540
     },
     {
       "path": "SECURITY.md",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "referee/cli.py",
-      "size": 16203
+      "size": 17005
     },
     {
       "path": "referee/comparison/__init__.py",
@@ -1828,7 +1828,7 @@
     },
     {
       "path": "referee/mcp/server.py",
-      "size": 1313
+      "size": 5559
     },
     {
       "path": "referee/models.py",
