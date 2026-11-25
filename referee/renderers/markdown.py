@@ -38,6 +38,12 @@ def render_review_markdown(state: ReviewState) -> str:
             "",
             f"**Closure criterion.** {c.get('closure_criterion','')}",
         ]
+    auto = fr.get("automated_checks") or {}
+    if auto.get("findings"):
+        lines += ["", "## Automated numerical and reference checks (offline recomputation)"]
+        for f in auto["findings"]:
+            q = f" `{f['quote']}`" if f.get("quote") else ""
+            lines.append(f"- **{f.get('check')}** ({f.get('severity')}):{q} {f.get('note')}")
     minor = fr.get("minor_comments") or []
     if minor:
         lines += ["", "## Minor comments"] + [f"- {x if isinstance(x,str) else x.get('text',x)}" for x in minor]
