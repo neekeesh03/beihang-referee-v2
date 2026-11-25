@@ -3,7 +3,9 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 
 full_core_order = [
+    'core/PHASES.md',
     'core/PEER_REVIEW_PROMPT.md',
+    'core/DEFECT_HUNT.md',
     'core/INDEPENDENT_VERIFIER_PROMPT.md',
     'core/AGENT_SYSTEM.md',
     'core/POLICY_GATE.md',
@@ -32,7 +34,9 @@ full_core_order = [
 ]
 
 core_pipeline_order = [
+    'core/PHASES.md',
     'core/CORE_REVIEWER_PROMPT.md',
+    'core/DEFECT_HUNT.md',
     'core/SPECIALIST_EXECUTOR_PROMPT.md',
     'core/CORE_VERIFIER_PROMPT.md',
     'core/DIAGNOSTIC_SCORECARD_PROMPT.md',
