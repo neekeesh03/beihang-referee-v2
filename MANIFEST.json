@@ -1,11 +1,11 @@
 {
   "name": "Beihang Referee",
-  "build_date": "2026-11-25",
+  "build_date": "2026-11-26",
   "description": "Evidence-grounded agentic peer review for scientific manuscripts",
   "skills": 56,
   "agents": 24,
-  "runtime_modules": 173,
-  "tests": 71,
+  "runtime_modules": 174,
+  "tests": 72,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 29719
+      "size": 31067
     },
     {
       "path": "SECURITY.md",
@@ -400,11 +400,11 @@
     },
     {
       "path": "dist/BEIHANG_REFEREE_FULL_AUDIT_PROMPT.md",
-      "size": 136300
+      "size": 141527
     },
     {
       "path": "dist/BEIHANG_REFEREE_PROMPT.md",
-      "size": 119234
+      "size": 124461
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -504,7 +504,7 @@
     },
     {
       "path": "examples/expected_demo_review.md",
-      "size": 4064
+      "size": 4091
     },
     {
       "path": "fixtures/binary_regression/structural_00.docx",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "referee/cli.py",
-      "size": 18965
+      "size": 19285
     },
     {
       "path": "referee/comparison/__init__.py",
@@ -1828,7 +1828,7 @@
     },
     {
       "path": "referee/mcp/server.py",
-      "size": 7388
+      "size": 9505
     },
     {
       "path": "referee/models.py",
@@ -1928,7 +1928,7 @@
     },
     {
       "path": "referee/renderers/markdown.py",
-      "size": 6292
+      "size": 6648
     },
     {
       "path": "referee/reporting/__init__.py",
@@ -2116,7 +2116,7 @@
     },
     {
       "path": "referee/stages/core.py",
-      "size": 66750
+      "size": 68152
     },
     {
       "path": "referee/stages/modes.py",
@@ -2128,7 +2128,7 @@
     },
     {
       "path": "referee/stages/review.py",
-      "size": 80319
+      "size": 80961
     },
     {
       "path": "referee/utils/__init__.py",
@@ -2268,7 +2268,7 @@
     },
     {
       "path": "scripts/build_single_prompt.py",
-      "size": 3149
+      "size": 3247
     },
     {
       "path": "scripts/prepare_expert_study.py",
