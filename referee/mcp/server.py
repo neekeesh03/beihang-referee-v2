@@ -33,7 +33,7 @@ def build_server():
 
     @mcp.tool()
     def get_playbook(stage: str | None = None) -> dict:
-        """START HERE. Returns the review workflow (what you, the AI, do at each step), plus the rules for voice, stopping, decision calibration and the path-to-a-stronger-paper. Optional stage: voice, stopping, decision, elevation, evidence."""
+        """START HERE. With no argument: the phased workflow plus the DISCOVER rules only (evidence, defect hunt, coverage). Call again with 'adjudicate', 'write' or 'revise' when you reach those phases, or with one rule name (phases, evidence, defect_hunt, coverage, decision, stopping, voice, report_style, elevation, writing, response). Style and decision rules are deliberately withheld during discovery so they cannot compete with finding defects."""
         return D.playbook(stage)
 
     @mcp.tool()
@@ -90,14 +90,30 @@ def build_server():
         return _cf(pdf_path)
 
     @mcp.tool()
-    def submit_concerns(manuscript_id: str, claims: list[dict[str, Any]], concerns: list[dict[str, Any]]) -> dict:
-        """The admission gate and decision. claims: [{claim_id, text, centrality: central|supporting}]. concerns: [{title, claim_ids, anchors:[exact quotes], failure_mechanism, scientific_consequence, consequence_level: invalidates|changes_interpretation|weakens|minor, minimum_resolution, closure_criterion, confidence 0-1, steelman, steelman_survival}]. Returns admitted vs downgraded concerns (with reasons) and the editorial recommendation you must use. Freezes the ledger for revision rounds."""
-        return D.submit_concerns(D.Session.load(manuscript_id), claims, concerns)
+    def trace_claim(manuscript_id: str, claim_text: str, k: int = 4) -> dict:
+        """Follow a claim to its result passages and method passages, with the questions to ask about how the number was produced. Use for every central claim."""
+        return D.trace_claim(D.Session.load(manuscript_id), claim_text, k)
+
+    @mcp.tool()
+    def inspect_code(path: str) -> dict:
+        """Attention pointers for a supplied Python file: lag/shift/alignment operations, a lag set once and reused across participants, preprocessing before a train/test split, unseeded splits. Pointers are places to read, not verdicts."""
+        return D.inspect_code(open(path, encoding="utf-8", errors="replace").read(), path)
+
+    @mcp.tool()
+    def submit_concerns(manuscript_id: str, claims: list[dict[str, Any]], concerns: list[dict[str, Any]],
+                        require_verification: bool = False, independent_verdicts: dict[str, dict[str, Any]] | None = None) -> dict:
+        """The admission gate and decision. claims: [{claim_id, text, centrality: central|supporting}]. concerns: [{title, claim_ids, anchors:[exact quotes, or {quote, shows}], failure_mechanism, scientific_consequence, consequence_level: invalidates|changes_interpretation|weakens|minor, fix_type: wording|reanalysis|new_data, minimum_resolution, closure_criterion, confidence 0-1, steelman, survives_steelman: true, steelman_survival}]. Checks: quotes exist AND relate to the concern; confidence valid; the concern survives its steelman; near-duplicates merge; budget by central claim. STRONGEST MODE: call with require_verification=true to get verification packets, give them to a second AI context, then call again with independent_verdicts {packet_id: verdict}. Without it the result is marked verification_level self_only (provisional). The ledger is frozen and cannot be overwritten."""
+        return D.submit_concerns(D.Session.load(manuscript_id), claims, concerns, 1, independent_verdicts, require_verification)
+
+    @mcp.tool()
+    def lint_review(review_text: str, gate_result: dict[str, Any], max_words: int = 3500) -> dict:
+        """After writing the review, check it against the gate result: length budget, the gate's recommendation, every admitted concern present (information loss), no extra major comments, no repetition or fragmentation. gate_result is the return value of submit_concerns."""
+        return D.lint_review(review_text, gate_result, max_words)
 
     @mcp.tool()
     def revision_round(new_manuscript_id: str, prior_manuscript_id: str, statuses: dict[str, dict[str, Any]],
                        new_concerns: list[dict[str, Any]] | None = None) -> dict:
-        """Judge a revised manuscript against the FROZEN ledger of the first review. statuses: {concern_id: {status: OPEN|PARTIAL|VERIFIED_CLOSED|WORSENED, evidence_quote: exact quote from the revision (required to close), note}}. new_concerns need origin introduced_by_revision, missed_factual_error, or field_development (then also external_source: DOI/URL), with anchors in the revised text; anything else is rejected as moving the goalposts."""
+        """Judge a revised manuscript against the FROZEN, hash-checked ledger of the previous round. statuses: {concern_id: {status: OPEN|PARTIAL|VERIFIED_CLOSED|WORSENED, evidence_quote: exact quote from the CHANGED text that addresses the closure criterion (required to close; text that already existed in the first version cannot close unless unchanged_text_justification is given), note}}. new_concerns need origin introduced_by_revision, missed_factual_error, or field_development (then also external_source: DOI/URL), with anchors in the revised text; anything else is rejected as moving the goalposts."""
         return D.revision_round(D.Session.load(new_manuscript_id), prior_manuscript_id, statuses, new_concerns)
 
     @mcp.tool()
