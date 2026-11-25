@@ -244,6 +244,8 @@ def submit_concerns(session: Session, claims: list[dict[str, Any]], concerns: li
     for i, c in enumerate(concerns, 1):
         ok, reasons, anchors = _gate_one(session, c, claim_ids, centrality)
         key = tuple(sorted(_norm(str(q))[:80] for q in (c.get("anchors") or [])))
+        if ok and str(c.get("consequence_level") or "").lower() == "minor":
+            ok, reasons = False, ["rated minor by the reviewer; reported as a minor comment, not a major concern, and it does not use the major budget"]
         if ok and key in seen_quotes:
             ok, reasons = False, ["duplicate of an earlier concern with the same anchor(s)"]
         if ok and len(admitted) >= MAX_MAJOR:
