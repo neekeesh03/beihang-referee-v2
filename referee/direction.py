@@ -324,6 +324,29 @@ def inspect_code(code: str, filename: str = "code.py") -> dict[str, Any]:
 
     v = V()
     v.visit(tree)
+    # Index arithmetic: x[p - 1] inside "for p in ...", and "+ 1 / - 1" on onset-like indices (off-by-one windows)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.For) and isinstance(node.target, ast.Name):
+            lv = node.target.id
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Subscript) and isinstance(sub.slice, ast.BinOp) and isinstance(sub.slice.op, (ast.Add, ast.Sub)):
+                    l, r = sub.slice.left, sub.slice.right
+                    if isinstance(l, ast.Name) and l.id == lv and isinstance(r, ast.Constant) and isinstance(r.value, int):
+                        what = ast.unparse(sub) if hasattr(ast, "unparse") else "index"
+                        add("index_offset_in_loop", sub.lineno, f"'{what}' indexes with the loop variable {'minus' if isinstance(sub.slice.op, ast.Sub) else 'plus'} {r.value}: another participant/trial/bin is used than the one being processed. Intended? For element 0 this wraps to the last item.")
+        if isinstance(node, ast.Subscript):
+            sl = node.slice
+            elts = sl.elts if isinstance(sl, ast.Tuple) else [sl]
+            for e in elts:
+                if isinstance(e, ast.BinOp) and isinstance(e.op, (ast.Add, ast.Sub)) and isinstance(e.left, ast.Name) \
+                        and re.search(r"(?i)(stim|onset|event|trial|bin|idx|index|marker)", e.left.id) and isinstance(e.right, ast.Constant) and isinstance(e.right.value, int):
+                    add("offset_on_event_index", node.lineno, f"'{e.left.id} {'-' if isinstance(e.op, ast.Sub) else '+'} {e.right.value}' selects a sample next to the event. Does the text say before or after the event? A one-bin error moves post-stimulus data into a 'pre-stimulus' window or the reverse.")
+    uses_groups = re.search(r"GroupKFold|LeaveOneGroupOut|LeaveOneOut|GroupShuffleSplit|StratifiedGroupKFold|groups\s*=", code)
+    about_people = re.search(r"(?i)participant|subject|patient|animal|person|child", code)
+    if not uses_groups and about_people:
+        for i, ln in enumerate(lines, 1):
+            if re.search(r"\b(KFold|StratifiedKFold|ShuffleSplit|train_test_split)\(", ln):
+                add("cv_not_grouped", i, "Trials from one participant can land in both train and test here. If the claim is generalisation to new people, folds must be grouped by participant (GroupKFold / LeaveOneGroupOut).")
     return {"file": filename, "status": "ok", "functions": v.functions, "pointers": sorted(pointers, key=lambda p: p["line"]),
             "note": "These are places to read, not verdicts. A pointer can be harmless; a missing pointer does not mean the code is correct."}
 
