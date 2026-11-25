@@ -20,6 +20,10 @@ full_core_order = [
     'guidelines/REPORTING_GUIDELINE_ROUTER.md',
     'core/SCORECARD.md',
     'core/TEN_JOURNAL_ENGINE.md',
+    'core/HUMAN_REVIEWER_VOICE.md',
+    'core/REVIEW_STOPPING_RULES.md',
+    'core/DECISION_CALIBRATION.md',
+    'core/ELEVATION_PLAN.md',
     'core/OUTPUT_CONTRACT.md',
 ]
 
@@ -41,6 +45,10 @@ core_pipeline_order = [
     'workflow/PIPELINE.md',
     'guidelines/REPORTING_GUIDELINE_ROUTER.md',
     'core/SCORECARD.md',
+    'core/HUMAN_REVIEWER_VOICE.md',
+    'core/REVIEW_STOPPING_RULES.md',
+    'core/DECISION_CALIBRATION.md',
+    'core/ELEVATION_PLAN.md',
     'core/OUTPUT_CONTRACT.md',
 ]
 
