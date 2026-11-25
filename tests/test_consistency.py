@@ -63,3 +63,9 @@ def test_zero_p_value_is_flagged_but_small_p_is_not():
 def test_doi_repeated_in_one_entry_is_not_a_duplicate():
     doc = "x\nReferences\n1. A doi:10.1/a.1 and https://doi.org/10.1/a.1\n2. B 10.2/b.2\n"
     assert not [f for f in check_references(doc, 2026) if f["check"] == "reference_duplicate_doi"]
+
+
+def test_issue_number_is_not_a_future_year():
+    doc = "x [1]\nReferences\n1. Smith A. Science 21(6509), 33-45 (2020)\n2. Jones B (2031) paper\n"
+    f = [x for x in check_references(doc, 2026) if x["check"] == "reference_future_year"]
+    assert f and "2031" in f[0]["note"] and "6509" not in f[0]["note"]

@@ -67,14 +67,14 @@ def test_new_data_demand_on_supporting_claim_is_downgraded():
     assert not out["admitted"] and "non-central" in out["downgraded"][0]["downgraded_because"][-1]
 
 
-def test_budget_of_five_majors():
+def test_budget_of_eight_majors():
     s = d.Session(V1); s.save()
     cs = [good(title=f"t{i}", anchors=[q]) for i, q in enumerate([
         "There was no randomized control group.", "A single observational cohort of 80 participants",
         "Mean Y increased from 50 to 60 units", "Outcome Y was measured after treatment",
         "compared with the cohort's pre-treatment value", "Intervention X causes a 20% improvement"])]
     out = d.submit_concerns(s, CLAIMS, cs)
-    assert len(out["admitted"]) == 5 and "budget" in out["downgraded"][0]["downgraded_because"][0]
+    assert len(out["admitted"]) == 6 and not out["downgraded"]  # budget is 8
 
 
 def test_revision_round_requires_evidence_to_close_and_blocks_goalposts():
@@ -102,3 +102,18 @@ def test_new_concern_must_be_introduced_by_revision():
     r = d.revision_round(s2, s1.id, st, [new_ok, old_text])
     assert len(r["new_concerns_accepted"]) == 1 and r["new_concerns_accepted"][0]["label"].startswith("NEW")
     assert any("already existed" in x for x in r["new_concerns_rejected"][0]["reasons"])
+
+
+def test_field_development_concern_needs_external_source_and_is_labelled():
+    s1 = d.Session(V1); s1.save(); d.submit_concerns(s1, CLAIMS, [good()])
+    s2 = d.Session(V2); s2.save()
+    st = {"MC-001": {"status": "VERIFIED_CLOSED", "evidence_quote": "is associated with a 20% improvement in outcome Y"}}
+    base = good(title="outdated baseline", origin="field_development", claim_ids=["C2"], anchors=["Mean Y increased from 50 to 60 units"])
+    r = d.revision_round(s2, s1.id, st, [base])
+    assert r["new_concerns_rejected"] and "external_source" in r["new_concerns_rejected"][0]["reasons"][0]
+    r = d.revision_round(s2, s1.id, st, [{**base, "external_source": "https://doi.org/10.1000/xyz"}])
+    assert r["new_concerns_accepted"] and "field_development" in r["new_concerns_accepted"][0]["label"]
+
+
+def test_playbook_includes_journal_report_style():
+    assert "Two separate verdicts" in d.playbook()["rules"]["report_style"]

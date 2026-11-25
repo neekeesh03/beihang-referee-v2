@@ -42,3 +42,8 @@ def test_fix_classifier():
     assert classify_fix("Reword the abstract") == "wording"
     assert classify_fix("Recompute with bootstrap") == "reanalysis"
     assert classify_fix("Recruit a new cohort") == "new_data"
+
+
+def test_comparing_saved_outputs_counts_as_reanalysis_and_matched_control_as_new_data():
+    assert classify_fix("Compare the saved outputs per dataset and report agreement.") == "reanalysis"
+    assert classify_fix("Run a matched control with the same model without the tool.") == "new_data"
