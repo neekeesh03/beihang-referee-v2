@@ -692,7 +692,7 @@ class CoreReviewStage(Stage):
     stage_id = "C02_core_review"
 
     async def run(self, ctx, state):
-        system = (ctx.prompts.core("CORE_REVIEWER_PROMPT.md") + "\n" + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md") + "\n" + ctx.prompts.core("REVIEW_STOPPING_RULES.md"))
+        system = (ctx.prompts.core("CORE_REVIEWER_PROMPT.md") + "\n" + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md") + "\n" + ctx.prompts.core("REVIEW_STOPPING_RULES.md") + "\n" + ctx.prompts.core("DECISION_CALIBRATION.md"))
         specialist_names = ", ".join(sorted(CORE_SKILL_FAMILIES))
         user = (
             _core_review_user_payload(state)
@@ -1306,6 +1306,12 @@ class CoreFinalizeStage(Stage):
         summary = core.get("manuscript_summary") or {}
         confidence = core.get("overall_scientific_confidence")
         has_major = bool(state.admitted_concerns)
+        # Offline, deterministic recomputation of reported statistics and references (no model).
+        from ..verification.consistency import run_automated_checks
+        from ..decision import editorial_recommendation
+        manuscript_text = "\n\n".join(str(d.get("text") or "") for d in state.document_map.get("documents", []) if isinstance(d, dict))
+        automated = run_automated_checks(manuscript_text)
+        editorial = editorial_recommendation(state.claims or [], state.admitted_concerns or [], automated["gross_inconsistencies"])
         verifier_independence = _verifier_independence(ctx)
         process_gates = {
             "evidence_lock": {"status": "pass", "admitted_major_concerns": len(state.admitted_concerns)},
@@ -1332,11 +1338,8 @@ class CoreFinalizeStage(Stage):
                 "overall_scientific_confidence": confidence,
                 "verifier_independence": verifier_independence,
                 "scientific_state": _submission_state(state),
-                "recommendation_basis": (
-                    "Major scientific issues remain and require closure before the central conclusions should be treated as secure."
-                    if has_major else
-                    "No major concern passed the evidence-locked independent-verification gate; remaining comments are minor, uncertain, or out of scope."
-                ),
+                "editorial_recommendation": editorial["recommendation"],
+                "recommendation_basis": editorial["basis"],
             },
             "minor_comments": minor,
             "strengths": strengths,
@@ -1351,6 +1354,8 @@ class CoreFinalizeStage(Stage):
                 "specialist_result": next(((v or {}).get("result") for v in state.specialist_results.values() if isinstance(v, dict) and (v or {}).get("specialist") == "numerical"), None),
             },
             "policy_status": dict(state.policy_status or {}),
+            "editorial_decision": editorial,
+            "automated_checks": automated,
         }
 
         # Exhaustive Core gets one fresh reassessment of the top verified issues,

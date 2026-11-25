@@ -1133,6 +1133,10 @@ class GateAndSynthesisStage(Stage):
             + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md")
             + "\n"
             + ctx.prompts.core("REVIEW_STOPPING_RULES.md")
+            + "\n"
+            + ctx.prompts.core("DECISION_CALIBRATION.md")
+            + "\n"
+            + ctx.prompts.core("ELEVATION_PLAN.md")
         )
         out = await _call(
             ctx,
