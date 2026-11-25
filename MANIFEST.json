@@ -4,8 +4,8 @@
   "description": "Evidence-grounded agentic peer review for scientific manuscripts",
   "skills": 56,
   "agents": 24,
-  "runtime_modules": 165,
-  "tests": 66,
+  "runtime_modules": 169,
+  "tests": 68,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 20317
+      "size": 23086
     },
     {
       "path": "SECURITY.md",
@@ -400,11 +400,11 @@
     },
     {
       "path": "dist/BEIHANG_REFEREE_FULL_AUDIT_PROMPT.md",
-      "size": 113238
+      "size": 123804
     },
     {
       "path": "dist/BEIHANG_REFEREE_PROMPT.md",
-      "size": 96172
+      "size": 106738
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -504,7 +504,7 @@
     },
     {
       "path": "examples/expected_demo_review.md",
-      "size": 3989
+      "size": 4064
     },
     {
       "path": "fixtures/binary_regression/structural_00.docx",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "referee/cli.py",
-      "size": 15417
+      "size": 16203
     },
     {
       "path": "referee/comparison/__init__.py",
@@ -1928,7 +1928,7 @@
     },
     {
       "path": "referee/renderers/markdown.py",
-      "size": 5936
+      "size": 6292
     },
     {
       "path": "referee/reporting/__init__.py",
@@ -2116,7 +2116,7 @@
     },
     {
       "path": "referee/stages/core.py",
-      "size": 66526
+      "size": 66674
     },
     {
       "path": "referee/stages/modes.py",
@@ -2128,7 +2128,7 @@
     },
     {
       "path": "referee/stages/review.py",
-      "size": 79885
+      "size": 80319
     },
     {
       "path": "referee/utils/__init__.py",
@@ -2268,7 +2268,7 @@
     },
     {
       "path": "scripts/build_single_prompt.py",
-      "size": 2597
+      "size": 2875
     },
     {
       "path": "scripts/prepare_expert_study.py",

@@ -10,9 +10,25 @@ This repository is a copy of [`neekeesh03/beihang-referee`](https://github.com/n
 | Review style defined by evidence rules and a scorecard. | **Human reviewer voice.** `core/HUMAN_REVIEWER_VOICE.md` tells the reviewer to read in a human order (what is this paper claiming, what must be true for it to hold, where did I stop trusting it, is this my misunderstanding) and to write like a fair referee: summary, real strengths, one concern per paragraph, must-fix / should-fix / optional, and honest uncertainty. |
 | Limits on concern admission, but no explicit stopping rule between review rounds. | **Stopping rules.** `core/REVIEW_STOPPING_RULES.md` keeps quality high without endless criticism: a frozen concern ledger, closed means closed, no raising the bar between rounds, new concerns only if the revision introduced them, and a plain "remaining points are suggestions" end state. The revision adjudicator follows these rules. |
 
-Tests: `tests/test_retrieval.py` (3 tests; whole suite 114 passed). The offline scripted demo output is byte-identical to `examples/expected_demo_review.md`.
+| One outcome: any verified major concern meant "major issues remain", so almost every paper read as a major revision. | **Graded editorial decision.** `referee/decision.py` returns ACCEPT, MINOR REVISION, MAJOR REVISION or REJECT IN CURRENT FORM from three facts per verified concern: does it touch a central claim, how consequential is it, and what is the cheapest fix (wording, reanalysis of existing data, or new data). The rules are printed in the report and the report says what the decision becomes if the driving concerns are closed. `core/DECISION_CALIBRATION.md` gives the same rules to the chat route and adds anti-negativity checks. |
+| Checking relied on the language model. | **`referee check` (no model, no API key).** Recomputes reported t, F, chi-square, r and z statistics against their reported p-values (respecting rounding), runs GRIM on means, checks counts against percentages, and checks numeric citations, duplicate DOIs and future years. Also runs inside every full review. |
+| Literature search needed configured providers. | **`referee check --literature` (free public sources, no key).** Verifies each cited DOI against Crossref, flags retracted or withdrawn papers and DOIs whose record does not match the reference text, and lists possible uncited prior art from Europe PMC. |
+| Feedback listed flaws. | **Elevation plan.** `core/ELEVATION_PLAN.md` asks for a ranked "path to a stronger paper" (the advance in one sentence, knowledge delta against retrieved sources, strongest rival explanation, evidence upgrades cheapest first, reproducibility, fit), tied to places in the manuscript. |
 
-**Limits, stated honestly.** The v2 prompt changes (voice and stopping rules) have not been measured against a benchmark; they are design changes. The scripted demo does not exercise real model judgement. The frozen validation manifest still describes v0.1.0 and is reported as stale by `scripts/validate_package.py` because runtime code changed; it has not been re-validated for v2. Retrieval is lexical (BM25), so a concern phrased in very different words than the manuscript can miss a passage.
+## Use it without an API key
+
+1. **Chat route:** `dist/BEIHANG_REFEREE_PROMPT.md` now includes the human voice, stopping rules, decision calibration and elevation plan.
+2. **Model-free checks:** `referee check paper.pdf` or `referee check paper.pdf --literature`.
+
+Tests: 128 pass (`tests/test_retrieval.py`, `test_decision.py`, `test_consistency.py` are new). The offline scripted demo still runs end to end; `examples/expected_demo_review.md` was regenerated because the decision brief now shows the graded recommendation and the numerical-checks section.
+
+**Limits, stated honestly.**
+- The prompt changes (voice, stopping rules, calibration, elevation plan) are design changes and have not been measured against a benchmark. The decision rules are heuristics: the fix type is read from the concern's stated minimum resolution by keywords, so an unusual wording can be misclassified. Editors should treat the recommendation as a structured starting point.
+- Statistics checks only see results written in the common "t(28) = 2.10, p = .045" style. GRIM is only meaningful for whole-number data. Absence of findings is not proof the numbers are right.
+- The literature check uses Crossref and Europe PMC. It needs internet, can miss papers outside those sources, and prior-art hits are candidates to read, not proof of missing citations or lack of novelty. OpenAlex now gives keyless users only a small shared daily budget, so it is not used here.
+- Retrieval over the manuscript is lexical (BM25), so a concern phrased in very different words than the manuscript can miss a passage.
+- Nothing here can guarantee a paper reaches a particular journal tier.
+- The frozen validation manifest still describes v0.1.0 and `scripts/validate_package.py` reports it as stale; it has not been re-validated for v2.
 
 ## AI-use disclosure
 
