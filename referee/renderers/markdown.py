@@ -44,6 +44,12 @@ def render_review_markdown(state: ReviewState) -> str:
         for f in auto["findings"]:
             q = f" `{f['quote']}`" if f.get("quote") else ""
             lines.append(f"- **{f.get('check')}** ({f.get('severity')}):{q} {f.get('note')}")
+    disp = fr.get("concern_dispositions") or []
+    if disp:
+        lines += ["", "## Concerns considered but not admitted (audit trail)"]
+        for d in disp[:40]:
+            why = d.get("why")
+            lines.append(f"- {d.get('title') or 'Untitled'}: {d.get('status')}" + (f" ({'; '.join(why) if isinstance(why, list) else why})" if why else ""))
     minor = fr.get("minor_comments") or []
     if minor:
         lines += ["", "## Minor comments"] + [f"- {x if isinstance(x,str) else x.get('text',x)}" for x in minor]
