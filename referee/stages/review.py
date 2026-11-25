@@ -692,7 +692,10 @@ class CoreReviewStage(Stage):
     stage_id = "C02_core_review"
 
     async def run(self, ctx, state):
-        system = (ctx.prompts.core("CORE_REVIEWER_PROMPT.md") + "\n" + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md") + "\n" + ctx.prompts.core("REVIEW_STOPPING_RULES.md") + "\n" + ctx.prompts.core("DECISION_CALIBRATION.md"))
+        # DISCOVER phase only: defect hunting and coverage. Voice, stopping and decision rules belong to later phases
+        # and must not compete with scientific discovery (see core/PHASES.md).
+        system = (ctx.prompts.core("CORE_REVIEWER_PROMPT.md") + "\n" + ctx.prompts.core("PHASES.md") + "\n"
+                  + ctx.prompts.core("DEFECT_HUNT.md") + "\n" + ctx.prompts.core("COVERAGE_CHECKLIST.md"))
         specialist_names = ", ".join(sorted(CORE_SKILL_FAMILIES))
         user = (
             _core_review_user_payload(state)
@@ -1280,7 +1283,10 @@ class CoreIndependentVerifierStage(Stage):
             "consequence_weight": _scientific_consequence_weight(c),
             "method": "deterministic-centrality-x-consequence-x-confidence",
         } for c in admitted]
-        state.admitted_concerns = admitted[:max_major]
+        from ..decision import consolidate_and_cap
+        kept, dropped = consolidate_and_cap(state.claims or [], admitted, max_major)
+        state.admitted_concerns = kept
+        state.rejected_concerns.extend(dropped)  # nothing disappears silently: dispositions are reported
         state.verification_candidates = list(state.admitted_concerns)
         ctx.checkpoints.write_artifact("core_independent_verification.json", state.verification_records)
 
@@ -1356,6 +1362,8 @@ class CoreFinalizeStage(Stage):
             "policy_status": dict(state.policy_status or {}),
             "editorial_decision": editorial,
             "automated_checks": automated,
+            "concern_dispositions": [{"title": c.get("title"), "status": c.get("status"), "why": c.get("admission_errors")}
+                                     for c in (state.rejected_concerns or []) if isinstance(c, dict)],
         }
 
         # Exhaustive Core gets one fresh reassessment of the top verified issues,

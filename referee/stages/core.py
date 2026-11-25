@@ -1050,7 +1050,10 @@ class ConcernAdmissionStage(Stage):
                     "verification_status", "verifier_run_id", "verifier_agent_id", "verifier_context_id", "verifier_model", "verifier_output_sha256"
                 )}
                 admitted.append(c)
-        state.admitted_concerns = admitted[: ctx.config.max_major_comments]
+        from ..decision import consolidate_and_cap
+        kept, dropped = consolidate_and_cap(state.claims or [], admitted, ctx.config.max_major_comments)
+        state.admitted_concerns = kept
+        rejected.extend(dropped)
         state.rejected_concerns.extend(rejected)
         ctx.checkpoints.write_artifact("concern_admission_log.json", {"admitted": state.admitted_concerns, "rejected": state.rejected_concerns})
 
@@ -1173,6 +1176,23 @@ class GateAndSynthesisStage(Stage):
         state.final_review["reproducibility_assessment"] = core.get("reproducibility_assessment", {})
         state.final_review["numerical_consistency"] = core.get("numerical_consistency", {})
         state.final_review["priority_ranking"] = state.priority_ranking
+        # Same decision and offline checks as the core pipeline, so every execution path reports the same way.
+        from ..decision import editorial_recommendation
+        from ..verification.consistency import run_automated_checks
+        text_all = "\n\n".join(str(d.get("text") or "") for d in state.document_map.get("documents", []) if isinstance(d, dict))
+        automated = run_automated_checks(text_all)
+        editorial = editorial_recommendation(state.claims or [], state.admitted_concerns or [], automated["gross_inconsistencies"])
+        state.final_review["editorial_decision"] = editorial
+        state.final_review["automated_checks"] = automated
+        brief = state.final_review.get("decision_brief")
+        if isinstance(brief, dict):
+            brief["editorial_recommendation"] = editorial["recommendation"]
+            brief["recommendation_basis"] = editorial["basis"]
+        # Nothing considered may vanish silently: list every candidate that was not admitted, with its reason.
+        state.final_review["concern_dispositions"] = [
+            {"title": c.get("title"), "status": c.get("status"), "why": c.get("admission_errors")}
+            for c in (state.rejected_concerns or []) if isinstance(c, dict)
+        ]
         state.final_review["literature_search_status"] = state.literature_status
         state.final_review["policy_status"] = state.policy_status
 
