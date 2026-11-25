@@ -122,7 +122,7 @@ def parser() -> argparse.ArgumentParser:
     ck.add_argument("--figures", action="store_true", help="Also look for duplicated images inside PDF figures (needs: pip install pymupdf pillow)")
     ck.add_argument("--json-out", help="Write the JSON result to this path")
     pb = sub.add_parser("playbook", help="Print the review directions and rules to paste into ANY AI chat (no key, no model)")
-    pb.add_argument("--stage", choices=["voice", "stopping", "decision", "elevation", "evidence"], help="Print one rule set only")
+    pb.add_argument("--stage", choices=["discover", "adjudicate", "write", "revise", "phases", "defect_hunt", "coverage", "voice", "stopping", "decision", "elevation", "evidence", "report_style", "writing", "response"], help="Print one rule set only")
     rs = sub.add_parser("response-check", help="Audit a response-to-reviewers letter against Noble's ten simple rules (no model)")
     rs.add_argument("response", help="Response letter file")
     rs.add_argument("--reviews", help="Reviewer comments file (lets it find unanswered comments)")
@@ -242,6 +242,10 @@ def main() -> int:
     if args.command == "playbook":
         from .direction import playbook
         pbk = playbook(args.stage)
+        if args.stage in ("discover", "adjudicate", "write", "revise"):
+            for name, text in pbk["rules"].items():
+                print(f"# {name}\n\n{text}\n\n---\n")
+            return 0
         if args.stage:
             print(pbk["rule"]); return 0
         print("# Beihang Referee playbook\n\n" + pbk["principle"] + "\n\n## Workflow")
