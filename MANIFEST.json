@@ -4,8 +4,8 @@
   "description": "Evidence-grounded agentic peer review for scientific manuscripts",
   "skills": 56,
   "agents": 24,
-  "runtime_modules": 171,
-  "tests": 70,
+  "runtime_modules": 173,
+  "tests": 71,
   "guideline_profiles": 15,
   "domain_pack_profiles": 8,
   "configuration_profiles": 5,
@@ -92,7 +92,7 @@
     },
     {
       "path": "README.md",
-      "size": 27359
+      "size": 28930
     },
     {
       "path": "SECURITY.md",
@@ -400,11 +400,11 @@
     },
     {
       "path": "dist/BEIHANG_REFEREE_FULL_AUDIT_PROMPT.md",
-      "size": 131139
+      "size": 136300
     },
     {
       "path": "dist/BEIHANG_REFEREE_PROMPT.md",
-      "size": 114073
+      "size": 119234
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -1580,7 +1580,7 @@
     },
     {
       "path": "referee/cli.py",
-      "size": 17176
+      "size": 18965
     },
     {
       "path": "referee/comparison/__init__.py",
@@ -1828,7 +1828,7 @@
     },
     {
       "path": "referee/mcp/server.py",
-      "size": 6004
+      "size": 7388
     },
     {
       "path": "referee/models.py",
@@ -2268,7 +2268,7 @@
     },
     {
       "path": "scripts/build_single_prompt.py",
-      "size": 3013
+      "size": 3149
     },
     {
       "path": "scripts/prepare_expert_study.py",
