@@ -24,6 +24,8 @@ full_core_order = [
     'core/REVIEW_STOPPING_RULES.md',
     'core/DECISION_CALIBRATION.md',
     'core/ELEVATION_PLAN.md',
+    'core/NATURE_STYLE_REPORT.md',
+    'core/COVERAGE_CHECKLIST.md',
     'core/OUTPUT_CONTRACT.md',
 ]
 
@@ -49,6 +51,8 @@ core_pipeline_order = [
     'core/REVIEW_STOPPING_RULES.md',
     'core/DECISION_CALIBRATION.md',
     'core/ELEVATION_PLAN.md',
+    'core/NATURE_STYLE_REPORT.md',
+    'core/COVERAGE_CHECKLIST.md',
     'core/OUTPUT_CONTRACT.md',
 ]
 
