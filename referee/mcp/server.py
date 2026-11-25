@@ -62,6 +62,12 @@ def build_server():
         return D.check_references(D.Session.load(manuscript_id))
 
     @mcp.tool()
+    def check_figures(pdf_path: str) -> dict:
+        """Find duplicated or re-used images inside a PDF's figures (perceptual hashing, flips, rotations, quadrants). Findings mean 'a human should compare these two images', never proof of misconduct. Needs pymupdf and pillow."""
+        from ..verification.figures import check_figures as _cf
+        return _cf(pdf_path)
+
+    @mcp.tool()
     def submit_concerns(manuscript_id: str, claims: list[dict[str, Any]], concerns: list[dict[str, Any]]) -> dict:
         """The admission gate and decision. claims: [{claim_id, text, centrality: central|supporting}]. concerns: [{title, claim_ids, anchors:[exact quotes], failure_mechanism, scientific_consequence, consequence_level: invalidates|changes_interpretation|weakens|minor, minimum_resolution, closure_criterion, confidence 0-1, steelman, steelman_survival}]. Returns admitted vs downgraded concerns (with reasons) and the editorial recommendation you must use. Freezes the ledger for revision rounds."""
         return D.submit_concerns(D.Session.load(manuscript_id), claims, concerns)
@@ -69,7 +75,7 @@ def build_server():
     @mcp.tool()
     def revision_round(new_manuscript_id: str, prior_manuscript_id: str, statuses: dict[str, dict[str, Any]],
                        new_concerns: list[dict[str, Any]] | None = None) -> dict:
-        """Judge a revised manuscript against the FROZEN ledger of the first review. statuses: {concern_id: {status: OPEN|PARTIAL|VERIFIED_CLOSED|WORSENED, evidence_quote: exact quote from the revision (required to close), note}}. new_concerns need origin introduced_by_revision or missed_factual_error, with anchors in the revised text; anything else is rejected as moving the goalposts."""
+        """Judge a revised manuscript against the FROZEN ledger of the first review. statuses: {concern_id: {status: OPEN|PARTIAL|VERIFIED_CLOSED|WORSENED, evidence_quote: exact quote from the revision (required to close), note}}. new_concerns need origin introduced_by_revision, missed_factual_error, or field_development (then also external_source: DOI/URL), with anchors in the revised text; anything else is rejected as moving the goalposts."""
         return D.revision_round(D.Session.load(new_manuscript_id), prior_manuscript_id, statuses, new_concerns)
 
     @mcp.tool()
