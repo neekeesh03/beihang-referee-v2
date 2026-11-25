@@ -62,6 +62,28 @@ def build_server():
         return D.check_references(D.Session.load(manuscript_id))
 
     @mcp.tool()
+    def check_writing(manuscript_id: str) -> dict:
+        """Descriptive prose metrics (sentence length, hedging, passive voice, acronyms never defined) plus flags a careful editor would raise. Descriptive, not a quality score."""
+        return D.check_writing_tool(D.Session.load(manuscript_id))
+
+    @mcp.tool()
+    def audit_response(response_text: str, reviewer_comments_text: str | None = None) -> dict:
+        """Audit an author's response-to-reviewers letter against Noble's ten simple rules (overview, quoted reviews, direct answers, self-contained changes, no bare 'addressed in the manuscript', tone flags, every point answered). Reports which comments look unanswered."""
+        from ..response import audit_response as _audit
+        return _audit(response_text, reviewer_comments_text)
+
+    @mcp.tool()
+    def response_skeleton(reviewer_comments_text: str, title: str = "the manuscript") -> str:
+        """Turn reviewer comments into an interleaved response-to-reviewers template (author side)."""
+        from ..response import response_skeleton as _sk
+        return _sk(reviewer_comments_text, title)
+
+    @mcp.tool()
+    def provenance_log(manuscript_id: str) -> list[dict[str, Any]]:
+        """Append-only record of which Referee tools ran on this manuscript, when, and a summary of each result."""
+        return D.provenance(manuscript_id)
+
+    @mcp.tool()
     def check_figures(pdf_path: str) -> dict:
         """Find duplicated or re-used images inside a PDF's figures (perceptual hashing, flips, rotations, quadrants). Findings mean 'a human should compare these two images', never proof of misconduct. Needs pymupdf and pillow."""
         from ..verification.figures import check_figures as _cf
