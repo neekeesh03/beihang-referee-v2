@@ -692,7 +692,7 @@ class CoreReviewStage(Stage):
     stage_id = "C02_core_review"
 
     async def run(self, ctx, state):
-        system = ctx.prompts.core("CORE_REVIEWER_PROMPT.md")
+        system = (ctx.prompts.core("CORE_REVIEWER_PROMPT.md") + "\n" + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md") + "\n" + ctx.prompts.core("REVIEW_STOPPING_RULES.md"))
         specialist_names = ", ".join(sorted(CORE_SKILL_FAMILIES))
         user = (
             _core_review_user_payload(state)

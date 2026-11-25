@@ -19,6 +19,7 @@ from ..contracts import schemas as S
 from ..contracts import validate_json_contract, normalize_concern, Concern, validate_and_materialize_core_review
 from ..utils.hashing import stable_json_hash
 from ..verification import verify_anchor_integrity, assess_closure_test, CitationVerifier, citation_metrics
+from ..evidence.retrieval import build_index, context_for_concern
 
 
 def _compact_docs(state: ReviewState, max_chars: int = 24000) -> str:
@@ -851,12 +852,26 @@ class ConcernVerificationStage(Stage):
         manuscript_hash = _manuscript_fingerprint(state)
         integrity_report = verify_anchor_integrity(state.evidence_anchors, state.document_map.get("documents", []))
         integrity = {r.get("anchor_id"): r for r in integrity_report.get("anchors", [])}
-        manuscript_for_judge = _compact_docs(state, 30000)
+        # Paper RAG: the verifier gets the opening of the paper (abstract/intro)
+        # plus the passages most relevant to THIS concern, instead of a blind
+        # truncation that could hide the very text the concern is about.
+        manuscript_opening = _compact_docs(state, 6000)
+        passage_index = build_index(state.document_map.get("documents", []))
 
         async def verify(c: dict[str, Any]):
             canonical = Concern.from_dict(c)
             anchors = [anchor_by_id[a] for a in canonical.evidence_anchor_ids]
             claims = [claim_by_id[x] for x in canonical.claim_ids]
+            manuscript_for_judge = (
+                "OPENING OF THE PAPER:\n" + manuscript_opening
+                + "\n\nRETRIEVED PASSAGES MOST RELEVANT TO THIS CONCERN (cite by passage id; "
+                "if the answer is not in these passages say NEEDS_EVIDENCE, do not guess):\n"
+                + context_for_concern(
+                    passage_index,
+                    json.dumps(canonical.scientific_payload(), ensure_ascii=False),
+                    [str(a.get("quote", "")) for a in anchors if isinstance(a, dict)],
+                )
+            )
             frozen_evidence = {
                 "claims": claims,
                 "anchors": anchors,
@@ -1114,6 +1129,10 @@ class GateAndSynthesisStage(Stage):
             + ctx.prompts.skill("32_review_synthesis")
             + "\n"
             + ctx.prompts.skill("42_review_bias_fairness")
+            + "\n"
+            + ctx.prompts.core("HUMAN_REVIEWER_VOICE.md")
+            + "\n"
+            + ctx.prompts.core("REVIEW_STOPPING_RULES.md")
         )
         out = await _call(
             ctx,
