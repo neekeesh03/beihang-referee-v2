@@ -15,10 +15,12 @@ from typing import Any
 
 NEW_DATA = ("collect", "new experiment", "additional experiment", "replicat", "recruit", "new cohort",
             "independent dataset", "independent cohort", "prospective", "validation cohort", "new data",
-            "additional data", "randomi", "external validation", "run new", "perform new")
+            "additional data", "randomi", "external validation", "run new", "perform new", "matched control",
+            "held-out", "held out", "new queries", "additional queries", "new benchmark", "control experiment", "equal-access")
 REANALYSIS = ("reanaly", "re-analy", "recompute", "recalculat", "sensitivity analys", "robustness",
               "adjust for", "control for", "stratif", "bootstrap", "additional analys", "new analys",
-              "multiple-comparison", "multiple comparison", "refit", "re-fit", "report effect size")
+              "multiple-comparison", "multiple comparison", "refit", "re-fit", "report effect size", "compare the saved",
+              "quantify", "quantif", "agreement", "paired", "confidence interval", "interval", "inter-rater", "kappa", "ablat")
 
 LEVELS = {"ACCEPT": 0, "MINOR_REVISION": 1, "MAJOR_REVISION": 2, "REJECT_IN_CURRENT_FORM": 3}
 

@@ -118,6 +118,7 @@ def parser() -> argparse.ArgumentParser:
     ck = sub.add_parser("check", help="Model-free checks (statistics vs p-values, GRIM, percentages, references; optional free literature lookup). No API key")
     ck.add_argument("paths", nargs="+", help="Manuscript file(s): pdf, docx, md, txt, tex")
     ck.add_argument("--literature", action="store_true", help="Also verify cited DOIs and look for uncited prior art using free public sources (needs internet, no key)")
+    ck.add_argument("--figures", action="store_true", help="Also look for duplicated images inside PDF figures (needs: pip install pymupdf pillow)")
     ck.add_argument("--json-out", help="Write the JSON result to this path")
     pb = sub.add_parser("playbook", help="Print the review directions and rules to paste into ANY AI chat (no key, no model)")
     pb.add_argument("--stage", choices=["voice", "stopping", "decision", "elevation", "evidence"], help="Print one rule set only")
@@ -244,7 +245,7 @@ def main() -> int:
         return 0
     if args.command == "check":
         from .checks import run_checks, render_checks_markdown
-        res = run_checks(args.paths, literature=args.literature)
+        res = run_checks(args.paths, literature=args.literature, figures=args.figures)
         if args.json_out:
             _write_or_print(res, args.json_out)
         print(render_checks_markdown(res)); return 0

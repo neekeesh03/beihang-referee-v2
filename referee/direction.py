@@ -30,7 +30,7 @@ from .evidence.retrieval import build_index, context_for_concern
 from .verification.closure import assess_closure_test
 from .verification.consistency import run_automated_checks
 
-MAX_MAJOR = 5
+MAX_MAJOR = 8
 NEAR_MATCH = 0.92
 RULE_FILES = {
     "voice": "HUMAN_REVIEWER_VOICE.md",
@@ -38,6 +38,8 @@ RULE_FILES = {
     "decision": "DECISION_CALIBRATION.md",
     "elevation": "ELEVATION_PLAN.md",
     "evidence": "EVIDENCE_DISCIPLINE.md",
+    "report_style": "NATURE_STYLE_REPORT.md",
+    "coverage": "COVERAGE_CHECKLIST.md",
 }
 
 WORKFLOW = [
@@ -47,13 +49,13 @@ WORKFLOW = [
      "referee_tool": None},
     {"step": 3, "name": "Objective checks", "ai_does": "Read the results of the checks and treat them as facts to cite, not opinions.",
      "referee_tool": "check_numbers, check_references"},
-    {"step": 4, "name": "Candidate concerns", "ai_does": "For each concern copy an EXACT short quote from the manuscript as its anchor. Use find_passages when unsure where something is. Before relying on a quote, run verify_quote. Distinguish 'not reported' from 'reported and invalid'. Give each concern a consequence_level: invalidates (a central claim cannot stand), changes_interpretation, weakens, or minor.",
+    {"step": 4, "name": "Candidate concerns", "ai_does": "For each concern copy an EXACT short quote from the manuscript as its anchor. Use find_passages when unsure where something is. Walk through rules.coverage and decide for each item whether it applies to this paper; raise only the ones that do and that you can anchor. Before relying on a quote, run verify_quote. Distinguish 'not reported' from 'reported and invalid'. Give each concern a consequence_level: invalidates (a central claim cannot stand), changes_interpretation, weakens, or minor.",
      "referee_tool": "find_passages, verify_quote"},
     {"step": 5, "name": "Steelman", "ai_does": "For each concern write the strongest reasonable reading in the authors' favour and say why the concern survives it. If it does not survive, drop it.",
      "referee_tool": None},
     {"step": 6, "name": "Admission gate and decision", "ai_does": "Send claims and concerns. Accept the gate's result: admitted concerns, downgraded ones, and the editorial recommendation. Do not argue past it.",
      "referee_tool": "submit_concerns"},
-    {"step": 7, "name": "Write the review", "ai_does": "Write the review in the human voice. The recommendation must be the one returned by the gate. Include strengths, must-fix / should-fix / optional, and the 'path to a stronger paper' (rules.elevation). Never state a fact, number or citation that you did not see.",
+    {"step": 7, "name": "Write the review", "ai_does": "Write the review in the human voice. The recommendation must be the one returned by the gate. Follow the journal-grade structure in rules.report_style: neutral summary with the authors' headline numbers, specific strengths, each weakness as observation + consequence + concrete request, minor comments, code/data remarks. Give TWO separate verdicts: soundness (the gate's recommendation) and significance/venue fit. Include the 'path to a stronger paper' (rules.elevation). Never state a fact, number or citation that you did not see.",
      "referee_tool": None},
     {"step": 8, "name": "Revision rounds", "ai_does": "For a revised manuscript judge only the frozen ledger. Closing a concern needs a quote from the revised text. New concerns are allowed only if the revision introduced them or a clear factual error was missed.",
      "referee_tool": "revision_round"},
@@ -215,7 +217,7 @@ def submit_concerns(session: Session, claims: list[dict[str, Any]], concerns: li
         if ok and key in seen_quotes:
             ok, reasons = False, ["duplicate of an earlier concern with the same anchor(s)"]
         if ok and len(admitted) >= MAX_MAJOR:
-            ok, reasons = False, [f"over the budget of {MAX_MAJOR} major concerns; report as a minor comment"]
+            ok, reasons = False, [f"over the budget of {MAX_MAJOR} major concerns; report as a ranked should-fix request"]
         row = {**c, "anchors_resolved": anchors}
         if ok:
             row["concern_id"] = f"MC-{len(admitted) + 1:03d}"
@@ -225,7 +227,8 @@ def submit_concerns(session: Session, claims: list[dict[str, Any]], concerns: li
         else:
             row["concern_id"] = f"DG-{i:03d}"
             row["downgraded_because"] = reasons
-            row["new_status"] = "question" if any("confidence" in r or "not verified" in r for r in reasons) else "minor"
+            row["new_status"] = ("question" if any("confidence" in r or "not verified" in r for r in reasons)
+                                 else "should_fix" if any("over the budget" in r for r in reasons) else "minor")
             downgraded.append(row)
     gross = run_automated_checks(session.text)["gross_inconsistencies"]
     rec = editorial_recommendation(claims, admitted, gross)
@@ -272,9 +275,11 @@ def revision_round(new_session: Session, prior_id: str, statuses: dict[str, dict
     for n in new_concerns or []:
         origin = str(n.get("origin") or "")
         why = []
-        if origin not in ("introduced_by_revision", "missed_factual_error"):
-            why.append("out of scope: after round 1 only concerns introduced by the revision or a clearly missed factual error are allowed (no moving goalposts)")
-        else:
+        if origin not in ("introduced_by_revision", "missed_factual_error", "field_development"):
+            why.append("out of scope: after round 1 only concerns introduced by the revision, a clearly missed factual error, or a verifiable change in the field are allowed (no moving goalposts)")
+        elif origin == "field_development" and not str(n.get("external_source") or "").strip():
+            why.append("a field_development concern must cite its external_source (DOI or URL) so the change in the field can be checked")
+        if not why:
             anchor_hits = [verify_quote(new_session, str(q)) for q in (n.get("anchors") or [])]
             if not anchor_hits or any(h["status"] != "verified" for h in anchor_hits):
                 why.append("anchor not found in the revised manuscript")
@@ -286,7 +291,7 @@ def revision_round(new_session: Session, prior_id: str, statuses: dict[str, dict
         if why:
             rejected.append({"title": n.get("title"), "reasons": why})
         else:
-            accepted.append({**n, "concern_id": f"NEW-{len(accepted) + 1:03d}", "label": "NEW, with reason: " + origin})
+            accepted.append({**n, "concern_id": f"NEW-{len(accepted) + 1:03d}", "label": "NEW, with reason: " + origin + (f" (source: {n.get('external_source')})" if n.get("external_source") else "")})
     still = remaining + accepted
     rec = editorial_recommendation(claims, still, run_automated_checks(new_session.text)["gross_inconsistencies"])
     return {"ledger_status": rows, "new_concerns_accepted": accepted, "new_concerns_rejected": rejected,
