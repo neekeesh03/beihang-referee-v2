@@ -298,7 +298,8 @@ def check_references(text: str, now_year: int | None = None) -> list[dict[str, A
     dup = sorted({d for d in flat if flat.count(d) > 1})
     if dup:
         out.append({"check": "reference_duplicate_doi", "severity": "minor", "note": f"Duplicate DOI(s) in references: {dup[:8]}."})
-    future = sorted({int(y) for y in re.findall(r"\((\d{4})[a-z]?\)", refs) if int(y) > now_year + 1})
+    # A "future year" must be plausibly a year (next ~10 years); issue numbers such as 21(6509) are not years.
+    future = sorted({int(y) for y in re.findall(r"(?<![\d(])\((\d{4})[a-z]?\)", refs) if now_year + 1 < int(y) <= now_year + 10})
     if future:
         out.append({"check": "reference_future_year", "severity": "minor", "note": f"Reference year(s) later than {now_year}: {future}."})
     return out
