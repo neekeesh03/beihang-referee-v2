@@ -1137,6 +1137,8 @@ class GateAndSynthesisStage(Stage):
             + ctx.prompts.core("DECISION_CALIBRATION.md")
             + "\n"
             + ctx.prompts.core("ELEVATION_PLAN.md")
+            + "\n"
+            + ctx.prompts.core("NATURE_STYLE_REPORT.md")
         )
         out = await _call(
             ctx,
