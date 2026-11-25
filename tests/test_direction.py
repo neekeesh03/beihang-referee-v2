@@ -285,3 +285,30 @@ def test_trace_claim_returns_result_and_method_passages():
     s = d.Session(V1)
     t = d.trace_claim(s, "Intervention X causes a 20% improvement")
     assert t["result_passages"] and t["method_passages"] and len(t["ask"]) >= 3
+
+
+def test_inspect_code_finds_index_offset_off_by_one_window_ungrouped_cv_and_scaler_leak():
+    code = '''
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import KFold
+
+def align_all(neural_all, lags):
+    out = []
+    for p in range(neural_all.shape[0]):
+        out.append(np.roll(neural_all[p], lags[p - 1]))
+    return out
+
+def trial_features(alpha, stim_bins):
+    return alpha[:, stim_bins + 1]
+
+def decode(features, labels, n_participants):
+    X = StandardScaler().fit_transform(features)
+    cv = KFold(n_splits=n_participants, shuffle=True)
+    for tr, te in cv.split(X):
+        pass
+'''
+    kinds = {p["kind"] for p in d.inspect_code(code, "a.py")["pointers"]}
+    assert {"index_offset_in_loop", "offset_on_event_index", "cv_not_grouped", "preprocess_before_split", "lag_or_shift"} <= kinds
+    clean = "def f(x, subjects):\n    from sklearn.model_selection import GroupKFold\n    return GroupKFold(5)\n"
+    assert not {p["kind"] for p in d.inspect_code(clean)["pointers"]} & {"cv_not_grouped", "index_offset_in_loop"}
