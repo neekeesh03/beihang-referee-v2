@@ -115,6 +115,10 @@ def parser() -> argparse.ArgumentParser:
     cs.add_argument("status", choices=["open", "resolved", "deferred", "not_actionable", "accepted_risk"])
     cs.add_argument("--note", default="")
 
+    ck = sub.add_parser("check", help="Model-free checks (statistics vs p-values, GRIM, percentages, references; optional free literature lookup). No API key")
+    ck.add_argument("paths", nargs="+", help="Manuscript file(s): pdf, docx, md, txt, tex")
+    ck.add_argument("--literature", action="store_true", help="Also verify cited DOIs and look for uncited prior art using free public sources (needs internet, no key)")
+    ck.add_argument("--json-out", help="Write the JSON result to this path")
     sub.add_parser("list-modes", help="List supported review purposes")
     sub.add_parser("list-profiles", help="List built-in configuration profiles")
     sub.add_parser("list-scholarly-providers", help="List built-in scholarly search adapters")
@@ -225,6 +229,12 @@ def main() -> int:
         if errors:
             print("\n".join(errors)); return 1
         print("OK"); return 0
+    if args.command == "check":
+        from .checks import run_checks, render_checks_markdown
+        res = run_checks(args.paths, literature=args.literature)
+        if args.json_out:
+            _write_or_print(res, args.json_out)
+        print(render_checks_markdown(res)); return 0
     if args.command == "inspect-package":
         _write_or_print(PackageInspector().inspect(args.paths).to_dict(), args.json_out); return 0
     if args.command == "compare-revision":
