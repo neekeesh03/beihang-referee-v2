@@ -1,3 +1,27 @@
+# Beihang Referee v2 (STEM2Connect AI Hackathon 2026, Scientific Research track)
+
+This repository is a copy of [`neekeesh03/beihang-referee`](https://github.com/neekeesh03/beihang-referee) (v0.1.0, released before the hackathon, last updated 12 October 2026) with the changes below. The original repository is unchanged.
+
+## What existed before vs. what changed in v2
+
+| Before (v0.1.0) | Changed in v2 |
+| --- | --- |
+| The independent verifier saw only the **first 30,000 characters** of a manuscript, so a concern about Methods or a supplement could be judged without the relevant text in view. | **Paper retrieval (RAG).** `referee/evidence/retrieval.py` splits every document into passages, ranks them with BM25 and gives the verifier the passages most relevant to each concern, with passage ids. Offline, deterministic, no API key. If nothing relevant is found the verifier must answer NEEDS_EVIDENCE instead of guessing. |
+| Review style defined by evidence rules and a scorecard. | **Human reviewer voice.** `core/HUMAN_REVIEWER_VOICE.md` tells the reviewer to read in a human order (what is this paper claiming, what must be true for it to hold, where did I stop trusting it, is this my misunderstanding) and to write like a fair referee: summary, real strengths, one concern per paragraph, must-fix / should-fix / optional, and honest uncertainty. |
+| Limits on concern admission, but no explicit stopping rule between review rounds. | **Stopping rules.** `core/REVIEW_STOPPING_RULES.md` keeps quality high without endless criticism: a frozen concern ledger, closed means closed, no raising the bar between rounds, new concerns only if the revision introduced them, and a plain "remaining points are suggestions" end state. The revision adjudicator follows these rules. |
+
+Tests: `tests/test_retrieval.py` (3 tests; whole suite 114 passed). The offline scripted demo output is byte-identical to `examples/expected_demo_review.md`.
+
+**Limits, stated honestly.** The v2 prompt changes (voice and stopping rules) have not been measured against a benchmark; they are design changes. The scripted demo does not exercise real model judgement. The frozen validation manifest still describes v0.1.0 and is reported as stale by `scripts/validate_package.py` because runtime code changed; it has not been re-validated for v2. Retrieval is lexical (BM25), so a concern phrased in very different words than the manuscript can miss a passage.
+
+## AI-use disclosure
+
+- v0.1.0 (before the hackathon): built by Nikesh Lagun with ChatGPT, working from published research on AI peer review.
+- v2 changes (this repository): written with Claude (Anthropic) through the Aside browser agent, directed and reviewed by Nikesh Lagun.
+- Runtime: the review itself uses a language model chosen by the user. The offline demo uses scripted responses and no model.
+
+---
+
 # How to use Beihang Referee
 
 **Input → ChatGPT → Output.** A clear, two-route starter kit for evidence-aware manuscript review.
